@@ -1,0 +1,60 @@
+# =========================
+# Godot 4
+# =========================
+
+# Godot-specific cache
+.godot/
+
+# Exported builds
+export/
+exports/
+
+# Mono / C# (safe to keep even if unused)
+.mono/
+data_*/
+*.csproj
+*.sln
+
+# Godot generated files
+.import/
+*.import
+*.translation
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+*.swp
+
+# =========================
+# OS / Editor junk
+# =========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# =========================
+# IDEs / Editors
+# =========================
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# =========================
+# Logs
+# =========================
+*.log
