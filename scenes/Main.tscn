@@ -2,24 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://dbv0x0ivx315m" path="res://scenes/Player.tscn" id="1_elqb8"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rvslj"]
-size = Vector2(1391, 162)
-
 [node name="Main" type="Node2D" unique_id=983427258]
 
 [node name="Player" parent="." unique_id=1071195117 instance=ExtResource("1_elqb8")]
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=539151830]
-
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1840053203]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=276590987]
-position = Vector2(542, 545)
-shape = SubResource("RectangleShape2D_rvslj")
-debug_color = Color(0.66570336, 0.5106437, 0.07617424, 0.42)
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=330540459]
-offset_left = 684.0
-offset_top = 241.0
-offset_right = 893.0
-offset_bottom = 360.0
