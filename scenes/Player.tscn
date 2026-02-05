@@ -183,7 +183,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_p0vlq"]
-size = Vector2(46.75, 106)
+size = Vector2(31, 57)
 
 [node name="Player" type="CharacterBody2D" unique_id=1071195117]
 position = Vector2(526, 242)
@@ -191,7 +191,8 @@ script = ExtResource("1_v6fml")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1784368217]
 texture_filter = 1
-scale = Vector2(2, 2)
+position = Vector2(0, 8.499993)
+scale = Vector2(1, 1.1328124)
 sprite_frames = SubResource("SpriteFrames_khinc")
 animation = &"Jump"
 autoplay = "Idle"
@@ -199,5 +200,5 @@ frame = 3
 frame_progress = 0.2640341
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1439900095]
-position = Vector2(0.625, 75)
+position = Vector2(-1.5, 50.5)
 shape = SubResource("RectangleShape2D_p0vlq")
