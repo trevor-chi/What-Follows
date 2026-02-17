@@ -6,11 +6,11 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_noxlr"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lr3y3"]
-size = Vector2(26, 81)
+size = Vector2(23, 81)
 
 [node name="Shadow" type="CharacterBody2D" unique_id=70465667]
 z_index = 100
-collision_layer = 3
+collision_layer = 4
 script = ExtResource("1_wxgxi")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1273881359]
@@ -23,5 +23,6 @@ animation = &"Idle"
 autoplay = "Idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=384731639]
-position = Vector2(133, 66.5)
+z_index = 1
+position = Vector2(134, 68)
 shape = SubResource("RectangleShape2D_lr3y3")
