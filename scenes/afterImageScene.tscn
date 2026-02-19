@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bilc7lergnct"]
+
+[ext_resource type="SpriteFrames" uid="uid://l3uikmrmm4jn" path="res://animationFrames/player_sprite_frames.tres" id="1_mbkjb"]
+
+[node name="AfterImageScene" type="CharacterBody2D" unique_id=1751432932]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1617342382]
+position = Vector2(135, -1)
+scale = Vector2(1.719, 1.719)
+sprite_frames = ExtResource("1_mbkjb")

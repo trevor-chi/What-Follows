@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://c3xnrs0g6w8bx"]
 
-[ext_resource type="Script" uid="uid://du7bb2ry5xctb" path="res://scripts/shadow.gd" id="1_wxgxi"]
+[ext_resource type="Script" uid="uid://du7bb2ry5xctb" path="res://scripts/shadow/shadow.gd" id="1_wxgxi"]
 [ext_resource type="SpriteFrames" uid="uid://l3uikmrmm4jn" path="res://animationFrames/player_sprite_frames.tres" id="2_lr3y3"]
+[ext_resource type="PackedScene" uid="uid://bilc7lergnct" path="res://scenes/afterImageScene.tscn" id="2_noxlr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_noxlr"]
 
@@ -12,6 +13,7 @@ size = Vector2(23, 81)
 z_index = 100
 collision_layer = 4
 script = ExtResource("1_wxgxi")
+afterimage_scene = ExtResource("2_noxlr")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1273881359]
 modulate = Color(0, 0, 0, 0.5882353)
