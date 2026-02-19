@@ -8,16 +8,6 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lr3y3"]
 size = Vector2(23, 81)
 
-[sub_resource type="Gradient" id="Gradient_lr3y3"]
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_noxlr"]
-gradient = SubResource("Gradient_lr3y3")
-width = 10
-height = 10
-fill_from = Vector2(1, 0)
-metadata/_snap_enabled = true
-metadata/_snap_count = 42
-
 [node name="Shadow" type="CharacterBody2D" unique_id=70465667]
 z_index = 100
 collision_layer = 4
@@ -37,12 +27,3 @@ autoplay = "Idle"
 z_index = 1
 position = Vector2(134, 68)
 shape = SubResource("RectangleShape2D_lr3y3")
-
-[node name="ShadowTrail" type="CPUParticles2D" parent="." unique_id=167219425]
-amount = 10
-texture = SubResource("GradientTexture2D_noxlr")
-lifetime = 0.5
-local_coords = true
-emission_shape = 1
-emission_sphere_radius = 53.59
-color = Color(0.00069389754, 0.00069389766, 0.0006938976, 0.5882353)

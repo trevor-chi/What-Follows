@@ -9,26 +9,28 @@ extends CharacterBody2D
 @export var stop_threshold: float = 0.5
 @export var jump_velocity_threshold: float = -10.0
 
+@export var afterimage_scene: PackedScene   # assign your AfterImage AnimatedSprite2D scene here
+@export var afterimage_interval: float = 0.05
+@export var afterimage_lifetime: float = 0.25
+
 # --- Node References ---
 @onready var shadow_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var trail_particles: CPUParticles2D = $ShadowTrail  # Make sure your Particles2D node is named 'ShadowTrail'
 
 # --- Internal State ---
 var facing_left: bool = false
 var current_animation: String = ""
 var state_queue: Array = []
+var afterimage_timer: float = 0.0
 
 func _ready():
 	if target:
 		global_position = target.global_position
-		# Pre-fill queue with player state
+		# Pre-fill queue for delay
 		for i in range(follow_delay):
 			state_queue.append({
 				"position": target.global_position,
 				"velocity": target.velocity
 			})
-	# Ensure particles are off at start
-	trail_particles.emitting = false
 
 func _physics_process(delta):
 	if not target:
@@ -48,7 +50,7 @@ func _physics_process(delta):
 		# --- 2a. Horizontal Movement ---
 		var dx = delayed.position.x - global_position.x
 		if abs(dx) < stop_threshold:
-			velocity.x = 0  # instant stop
+			velocity.x = 0
 		else:
 			velocity.x = delayed_velocity.x
 
@@ -56,7 +58,6 @@ func _physics_process(delta):
 		if delayed_velocity.y < jump_velocity_threshold and is_on_floor():
 			velocity.y = -jump_speed
 
-		# Apply gravity
 		velocity.y += gravity * delta
 
 		# --- 2c. Move with collisions ---
@@ -81,7 +82,20 @@ func _physics_process(delta):
 			facing_left = velocity.x < 0
 		shadow_sprite.flip_h = facing_left
 
-		# --- 5. Particle Trail ---
-		# Emit only if the shadow is moving horizontally or vertically
-		var is_moving = velocity.length() > 0.1
-		trail_particles.emitting = is_moving
+	# --- 5. Spawn Motion Blur After-Images ---
+	afterimage_timer += delta
+	if afterimage_timer >= afterimage_interval and velocity.length() > 0.1 and afterimage_scene:
+		afterimage_timer = 0.0
+		var after_image = afterimage_scene.instantiate() as AnimatedSprite2D
+		after_image.global_position = global_position
+		after_image.flip_h = shadow_sprite.flip_h
+		after_image.animation = shadow_sprite.animation
+		after_image.frame = shadow_sprite.frame
+		after_image.scale = shadow_sprite.scale
+		after_image.modulate = Color(0,0,0,0.5)  # semi-transparent start
+		get_parent().add_child(after_image)
+
+		# Fade out and remove after lifetime
+		after_image.create_timer(afterimage_lifetime).timeout.connect(func():
+			after_image.queue_free()
+		)
