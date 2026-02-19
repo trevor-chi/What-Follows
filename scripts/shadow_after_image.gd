@@ -9,9 +9,10 @@ extends CharacterBody2D
 @export var stop_threshold: float = 0.5
 @export var jump_velocity_threshold: float = -10.0
 
-@export var afterimage_scene: PackedScene   # assign your AfterImage AnimatedSprite2D scene here
+@export var afterimage_scene: PackedScene
 @export var afterimage_interval: float = 0.05
 @export var afterimage_lifetime: float = 0.25
+@export var afterimage_start_alpha: float = 0.5
 
 # --- Node References ---
 @onready var shadow_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -25,7 +26,6 @@ var afterimage_timer: float = 0.0
 func _ready():
 	if target:
 		global_position = target.global_position
-		# Pre-fill queue for delay
 		for i in range(follow_delay):
 			state_queue.append({
 				"position": target.global_position,
@@ -36,34 +36,31 @@ func _physics_process(delta):
 	if not target:
 		return
 
-	# --- 1. Record Player State ---
+	# --- Record Player State ---
 	state_queue.append({
 		"position": target.global_position,
 		"velocity": target.velocity
 	})
 
-	# --- 2. Apply Delayed Movement ---
 	if state_queue.size() > follow_delay:
 		var delayed = state_queue.pop_front()
 		var delayed_velocity: Vector2 = delayed.velocity
 
-		# --- 2a. Horizontal Movement ---
+		# --- Horizontal ---
 		var dx = delayed.position.x - global_position.x
 		if abs(dx) < stop_threshold:
 			velocity.x = 0
 		else:
 			velocity.x = delayed_velocity.x
 
-		# --- 2b. Vertical Movement ---
+		# --- Vertical ---
 		if delayed_velocity.y < jump_velocity_threshold and is_on_floor():
 			velocity.y = -jump_speed
 
 		velocity.y += gravity * delta
-
-		# --- 2c. Move with collisions ---
 		move_and_slide()
 
-		# --- 3. Animations ---
+		# --- Animations ---
 		var new_animation: String
 		if not is_on_floor():
 			new_animation = "Jump"
@@ -77,25 +74,42 @@ func _physics_process(delta):
 			shadow_sprite.play()
 			current_animation = new_animation
 
-		# --- 4. Flip sprite ---
+		# --- Flip ---
 		if velocity.x != 0:
 			facing_left = velocity.x < 0
 		shadow_sprite.flip_h = facing_left
 
-	# --- 5. Spawn Motion Blur After-Images ---
+	# --- Spawn Motion Blur ---
 	afterimage_timer += delta
-	if afterimage_timer >= afterimage_interval and velocity.length() > 0.1 and afterimage_scene:
-		afterimage_timer = 0.0
-		var after_image = afterimage_scene.instantiate() as AnimatedSprite2D
-		after_image.global_position = global_position
-		after_image.flip_h = shadow_sprite.flip_h
-		after_image.animation = shadow_sprite.animation
-		after_image.frame = shadow_sprite.frame
-		after_image.scale = shadow_sprite.scale
-		after_image.modulate = Color(0,0,0,0.5)  # semi-transparent start
-		get_parent().add_child(after_image)
 
-		# Fade out and remove after lifetime
-		after_image.create_timer(afterimage_lifetime).timeout.connect(func():
-			after_image.queue_free()
-		)
+	if afterimage_timer >= afterimage_interval \
+	and velocity.length() > 0.1 \
+	and afterimage_scene:
+
+		afterimage_timer = 0.0
+		spawn_afterimage()
+
+
+func spawn_afterimage():
+	var after_image = afterimage_scene.instantiate() as AnimatedSprite2D
+
+	# Copy visual state
+	after_image.global_position = global_position
+	after_image.flip_h = shadow_sprite.flip_h
+	after_image.animation = shadow_sprite.animation
+	after_image.frame = shadow_sprite.frame
+	after_image.scale = shadow_sprite.scale
+	after_image.modulate = Color(0, 0, 0, afterimage_start_alpha)
+
+	get_parent().add_child(after_image)
+
+	# Smooth fade out using Tween
+	var tween = create_tween()
+	tween.tween_property(
+		after_image,
+		"modulate:a",
+		0.0,
+		afterimage_lifetime
+	)
+
+	tween.tween_callback(after_image.queue_free)
