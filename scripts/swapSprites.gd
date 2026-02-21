@@ -1,41 +1,40 @@
 extends Node2D
-# Attach this to your main scene root
 
 @export var player: CharacterBody2D
 @export var shadow: CharacterBody2D
 
-func _ready():
-	if not player or not shadow:
-		push_error("Player and Shadow must be assigned in the inspector.")
+var _swap_requested := false
 
 func _unhandled_input(event):
-	if event.is_action_pressed("swap_sprites"):  # make sure InputMap has "swap" mapped to Space
+	if event.is_action_pressed("swap_sprites"):
+		_swap_requested = true
+
+func _physics_process(_delta):
+	if _swap_requested:
+		_swap_requested = false
 		swap_positions()
 
 func swap_positions():
 	if not player or not shadow:
 		return
 
-	# --- Save current sprite transforms for perfect visual alignment ---
-	var player_sprite = player.get_node("AnimatedSprite2D") as AnimatedSprite2D
-	var shadow_sprite = shadow.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	var p_sprite := player.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	var s_sprite := shadow.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	if not p_sprite or not s_sprite:
+		return
 
-	var player_transform = player_sprite.global_transform
-	var shadow_transform = shadow_sprite.global_transform
+	var p_sprite_pos := p_sprite.global_position
+	var s_sprite_pos := s_sprite.global_position
 
-	# --- Swap positions ---
-	player.global_position = shadow_transform.origin - (player_sprite.position)
-	shadow.global_position = player_transform.origin - (shadow_sprite.position)
+	var p_vel := player.velocity
+	var s_vel := shadow.velocity
 
-	# --- Swap velocities ---
-	var temp_vel = player.velocity
-	player.velocity = shadow.velocity
-	shadow.velocity = temp_vel
+	# Move bodies so rendered sprites land exactly on each other's old spot
+	player.global_position += (s_sprite_pos - p_sprite_pos)
+	shadow.global_position += (p_sprite_pos - s_sprite_pos)
 
-	# --- Reset shadow queue to prevent double jumps or replaying old motion ---
+	player.velocity = s_vel
+	shadow.velocity = p_vel
+
 	if shadow.has_method("reset_queue"):
 		shadow.reset_queue()
-
-	# --- Force shadow to fall if the player was mid-air ---
-	if not player.is_on_floor() and shadow.has_variable("force_fall"):
-		shadow.force_fall = true

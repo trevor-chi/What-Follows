@@ -21,17 +21,21 @@ var state_queue: Array = []
 var current_animation: String = ""
 var facing_left := false
 var afterimage_timer := 0.0
-var force_fall := false  # prevents jumping immediately after a mid-air swap
+var force_fall := false
+
 
 func _ready():
 	if target:
 		global_position = target.global_position
+		
 		# Pre-fill queue for smooth delay
 		for i in range(follow_delay):
 			state_queue.append({
 				"position": target.global_position,
-				"velocity": target.velocity
+				"velocity": target.velocity,
+				"did_jump": false
 			})
+
 
 func _physics_process(delta):
 	if not target:
@@ -40,30 +44,28 @@ func _physics_process(delta):
 	# --- 1. Record Player State ---
 	state_queue.append({
 		"position": target.global_position,
-		"velocity": target.velocity
+		"velocity": target.velocity,
+		"did_jump": target.did_jump_this_frame
 	})
 
 	# --- 2. Apply Delayed Movement ---
 	if state_queue.size() > follow_delay:
 		var delayed = state_queue.pop_front()
-		var delayed_velocity: Vector2 = delayed.velocity
+		var delayed_velocity: Vector2 = delayed["velocity"]
 
 		# --- Horizontal Movement ---
-		var dx = delayed.position.x - global_position.x
+		var dx = delayed["position"].x - global_position.x
 		if abs(dx) < stop_threshold:
 			velocity.x = 0
 		else:
 			velocity.x = delayed_velocity.x
 
-		# --- Vertical Movement ---
-		# Calculate relative vertical position
-		var dy = delayed.position.y - global_position.y
+		# --- Vertical Movement (REAL jump sync) ---
+		var did_jump := false
+		if delayed.has("did_jump"):
+			did_jump = delayed["did_jump"]
 
-		# Jump only if:
-		# 1. Shadow is on floor
-		# 2. Player is above shadow (moving upward relative to it)
-		# 3. Not forced to fall from swap
-		if is_on_floor() and not force_fall and dy < -0.1:
+		if is_on_floor() and not force_fall and did_jump:
 			velocity.y = -jump_speed
 
 		# Apply gravity
@@ -94,11 +96,12 @@ func _physics_process(delta):
 			facing_left = velocity.x < 0
 		shadow_sprite.flip_h = facing_left
 
-	# --- 3. After-Images (Motion Blur) ---
+	# --- 3. After-Images ---
 	afterimage_timer += delta
 	if afterimage_timer >= afterimage_interval and velocity.length() > 0.1 and afterimage_scene:
 		afterimage_timer = 0.0
 		spawn_afterimage()
+
 
 # --- Spawn After-Image Safely ---
 func spawn_afterimage():
@@ -107,11 +110,8 @@ func spawn_afterimage():
 		return
 
 	get_tree().current_scene.add_child(after_image)
-
-	# Match shadow's global transform
 	after_image.global_transform = global_transform
 
-	# Copy the child AnimatedSprite2D inside the after-image scene
 	var sprite = after_image.get_node("AnimatedSprite2D") as AnimatedSprite2D
 	if sprite:
 		sprite.animation = shadow_sprite.animation
@@ -123,11 +123,13 @@ func spawn_afterimage():
 		tween.tween_property(sprite, "modulate:a", 0.0, afterimage_lifetime)
 		tween.tween_callback(after_image.queue_free)
 
+
 # --- Reset queue (for swaps) ---
 func reset_queue():
 	state_queue.clear()
 	for i in range(follow_delay):
 		state_queue.append({
-			"position": target.global_position,
-			"velocity": target.velocity
+			"position": global_position, # shadow current position, not target
+			"velocity": velocity,
+			"did_jump": false
 		})

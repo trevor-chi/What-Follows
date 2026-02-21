@@ -10,14 +10,24 @@ var facing_dir := 1          # 1 = right, -1 = left
 var was_on_floor := false
 var jump_anim_finished := false
 
+# NEW: real jump signal flag
+var did_jump_this_frame := false
+
+
 func _ready():
 	anim.play("Idle")
+
 
 func play_anim(name: String):
 	if anim.animation != name:
 		anim.play(name)
 
+
 func _physics_process(delta):
+
+	# Reset jump flag every physics frame
+	did_jump_this_frame = false
+
 	# --------------------
 	# MOVEMENT
 	# --------------------
@@ -29,6 +39,7 @@ func _physics_process(delta):
 	# jump input
 	if is_on_floor() and Input.is_action_just_pressed("jump"):
 		velocity.y = -jumpVel
+		did_jump_this_frame = true   # ← THIS is the important addition
 
 	# horizontal movement
 	var direction := Input.get_axis("move_left", "move_right")
