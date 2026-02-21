@@ -1,92 +1,134 @@
 extends CharacterBody2D
 
-@onready var anim := $AnimatedSprite2D
+@onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 
 @export var speed := 400.0
 @export var jumpVel := 750.0
 @export var gravity := 1100.0
 
-var facing_dir := 1          # 1 = right, -1 = left
+# Smoother ground movement
+@export var accel := 2800.0
+@export var decel := 3200.0
+@export var attack_move_multiplier := 0.45 # % of move speed while attacking
+
+var facing_dir := 1 # 1 = right, -1 = left
 var was_on_floor := false
 var jump_anim_finished := false
-
-# NEW: real jump signal flag
 var did_jump_this_frame := false
 
+# Attack combo state
+var is_attacking := false
+var attack_step := 0 # 0 = none, 1..3 = combo hit
+var queued_next_attack := false
 
-func _ready():
+
+func _ready() -> void:
 	anim.play("Idle")
 
+	# Ensure finish signal is connected even if editor connection is missing.
+	if not anim.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
+		anim.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
-func play_anim(name: String):
+
+func play_anim(name: String) -> void:
 	if anim.animation != name:
 		anim.play(name)
 
 
-func _physics_process(delta):
+func start_attack(step: int) -> void:
+	is_attacking = true
+	attack_step = step
+	queued_next_attack = false
+	anim.play("Attack_%d" % attack_step)
 
-	# Reset jump flag every physics frame
-	did_jump_this_frame = false
 
-	# --------------------
-	# MOVEMENT
-	# --------------------
+func end_attack(direction: float, on_floor: bool) -> void:
+	is_attacking = false
+	attack_step = 0
+	queued_next_attack = false
 
-	# gravity
-	if not is_on_floor():
-		velocity.y += gravity * delta
+	if not on_floor:
+		return
 
-	# jump input
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
-		velocity.y = -jumpVel
-		did_jump_this_frame = true   # ← THIS is the important addition
-
-	# horizontal movement
-	var direction := Input.get_axis("move_left", "move_right")
 	if direction != 0:
-		facing_dir = direction
-
-	velocity.x = direction * speed
-
-	# move FIRST to update floor state
-	move_and_slide()
-
-	# --------------------
-	# STATE CHECKS
-	# --------------------
-
-	var on_floor := is_on_floor()
-
-	# --------------------
-	# ANIMATIONS
-	# --------------------
-
-	# takeoff (play jump ONCE)
-	if was_on_floor and not on_floor:
-		jump_anim_finished = false
-		anim.play("Jump")
-
-	# airborne
-	elif not on_floor:
-		if jump_anim_finished:
-			anim.pause()  # freeze last jump frame
-
-	# grounded
-	elif direction != 0:
 		play_anim("Running")
 	else:
 		play_anim("Idle")
 
-	anim.flip_h = facing_dir < 0
 
-	# update state
+func _physics_process(delta: float) -> void:
+	did_jump_this_frame = false
+
+	# Gravity
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
+	# Jump (allowed while attacking)
+	if is_on_floor() and Input.is_action_just_pressed("jump"):
+		velocity.y = -jumpVel
+		did_jump_this_frame = true
+
+	# Attack input (ground combo)
+	if Input.is_action_just_pressed("attack") and is_on_floor():
+		if not is_attacking:
+			start_attack(1)
+		elif attack_step < 3:
+			queued_next_attack = true
+
+	# Horizontal movement (smoothed, including during attacks)
+	var input_dir := Input.get_axis("move_left", "move_right")
+
+	# Keep facing stable unless clear input
+	if abs(input_dir) > 0.2:
+		facing_dir = int(sign(input_dir))
+
+	var target_speed := input_dir * speed
+	if is_attacking:
+		target_speed *= attack_move_multiplier
+
+	# Smooth horizontal velocity
+	if abs(target_speed) > 0.01:
+		velocity.x = move_toward(velocity.x, target_speed, accel * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
+
+	move_and_slide()
+
+	var on_floor := is_on_floor()
+
+	# Safety fallback: recover if signal is missed.
+	if is_attacking and not anim.is_playing():
+		if queued_next_attack and attack_step < 3 and on_floor:
+			start_attack(attack_step + 1)
+		else:
+			end_attack(input_dir, on_floor)
+
+	# Non-attack animation flow
+	if not is_attacking:
+		if was_on_floor and not on_floor:
+			jump_anim_finished = false
+			anim.play("Jump")
+		elif not on_floor:
+			if jump_anim_finished:
+				anim.pause() # freeze last jump frame
+		elif abs(input_dir) > 0.01:
+			play_anim("Running")
+		else:
+			play_anim("Idle")
+
+	anim.flip_h = facing_dir < 0
 	was_on_floor = on_floor
 
 
-# --------------------
-# SIGNALS
-# --------------------
-
-func _on_animated_sprite_2d_animation_finished():
+func _on_animated_sprite_2d_animation_finished() -> void:
 	if anim.animation == "Jump":
 		jump_anim_finished = true
+		return
+
+	if anim.animation.begins_with("Attack_"):
+		var on_floor := is_on_floor()
+		if queued_next_attack and attack_step < 3 and on_floor:
+			start_attack(attack_step + 1)
+		else:
+			var direction := Input.get_axis("move_left", "move_right")
+			end_attack(direction, on_floor)
