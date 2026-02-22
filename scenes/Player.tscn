@@ -6,6 +6,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_p0vlq"]
 size = Vector2(25, 78)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v6fml"]
+bg_color = Color(0.43185103, 0.43184647, 0.4467224, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.0006938975, 0.00069389783, 0.00069389667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3li8b"]
+bg_color = Color(0.09093822, 0.97962993, 0.26391178, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [node name="Player" type="CharacterBody2D" unique_id=1071195117]
 position = Vector2(526, 242)
 collision_layer = 2
@@ -21,3 +36,19 @@ autoplay = "Idle"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1439900095]
 position = Vector2(-1.5, 69)
 shape = SubResource("RectangleShape2D_p0vlq")
+
+[node name="HealthBarPivot" type="Node2D" parent="." unique_id=486630011]
+modulate = Color(0.09786251, 0.8068469, 0.32505092, 1)
+position = Vector2(0, -30)
+
+[node name="HealthBar" type="ProgressBar" parent="HealthBarPivot" unique_id=1386366231]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_right = 20.0
+offset_bottom = 27.0
+grow_horizontal = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_v6fml")
+theme_override_styles/fill = SubResource("StyleBoxFlat_3li8b")
+value = 100.0

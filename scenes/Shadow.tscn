@@ -22,7 +22,7 @@ material = SubResource("ShaderMaterial_noxlr")
 position = Vector2(135, -0.9999962)
 scale = Vector2(1.4843751, 1.7187502)
 sprite_frames = ExtResource("2_lr3y3")
-animation = &"Idle"
+animation = &"Attack_1"
 autoplay = "Idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=384731639]

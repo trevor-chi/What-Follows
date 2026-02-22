@@ -1,15 +1,23 @@
 extends CharacterBody2D
 
+signal health_changed(current: int, max_value: int)
+signal died
+
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
+@onready var health_bar: ProgressBar = $HealthBarPivot/HealthBar
 
 @export var speed := 400.0
 @export var jumpVel := 750.0
 @export var gravity := 1100.0
 
+# Health
+@export var max_health: int = 100
+var health: int = 100
+
 # Smoother ground movement
 @export var accel := 2800.0
-@export var decel := 3200.0
-@export var attack_move_multiplier := 0.45 # % of move speed while attacking
+@export var decel := 4200.0
+@export var attack_move_multiplier := 0.2 # % of move speed while attacking
 
 var facing_dir := 1 # 1 = right, -1 = left
 var was_on_floor := false
@@ -25,14 +33,57 @@ var queued_next_attack := false
 func _ready() -> void:
 	anim.play("Idle")
 
+	health = max_health
+	_update_health_bar()
+	health_changed.emit(health, max_health)
+	
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color("1f1f1f")
+	bg.border_color = Color.BLACK
+	bg.set_border_width_all(2)
+	bg.set_corner_radius_all(6)
+	health_bar.add_theme_stylebox_override("background", bg)
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color("d94343")
+	fill.set_corner_radius_all(6)
+	health_bar.add_theme_stylebox_override("fill", fill)
+
+	health_bar.add_theme_color_override("font_color", Color.WHITE)
+
+
 	# Ensure finish signal is connected even if editor connection is missing.
 	if not anim.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
 		anim.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
+func _update_health_bar() -> void:
+	health_bar.max_value = max_health
+	health_bar.value = health
 
 func play_anim(name: String) -> void:
 	if anim.animation != name:
 		anim.play(name)
+
+
+func take_damage(amount: int) -> void:
+	if amount <= 0:
+		return
+
+	health = clampi(health - amount, 0, max_health)
+	_update_health_bar()
+	health_changed.emit(health, max_health)
+
+	if health <= 0:
+		died.emit()
+
+
+func heal(amount: int) -> void:
+	if amount <= 0:
+		return
+
+	health = clampi(health + amount, 0, max_health)
+	_update_health_bar()
+	health_changed.emit(health, max_health)
 
 
 func start_attack(step: int) -> void:
@@ -102,6 +153,10 @@ func _physics_process(delta: float) -> void:
 			start_attack(attack_step + 1)
 		else:
 			end_attack(input_dir, on_floor)
+
+	# temp test for player damage
+	if Input.is_action_just_pressed("damage"):
+		take_damage(10)
 
 	# Non-attack animation flow
 	if not is_attacking:

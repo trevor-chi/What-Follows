@@ -27,13 +27,14 @@ var force_fall := false
 func _ready():
 	if target:
 		global_position = target.global_position
-		
+
 		# Pre-fill queue for smooth delay
 		for i in range(follow_delay):
 			state_queue.append({
 				"position": target.global_position,
 				"velocity": target.velocity,
-				"did_jump": false
+				"did_jump": false,
+				"attack_anim": ""
 			})
 
 
@@ -41,11 +42,18 @@ func _physics_process(delta):
 	if not target:
 		return
 
+	# Read player's current attack animation (if any)
+	var target_attack_anim := ""
+	var target_sprite := target.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if target_sprite and target_sprite.animation.begins_with("Attack_"):
+		target_attack_anim = target_sprite.animation
+
 	# --- 1. Record Player State ---
 	state_queue.append({
 		"position": target.global_position,
 		"velocity": target.velocity,
-		"did_jump": target.did_jump_this_frame
+		"did_jump": target.did_jump_this_frame,
+		"attack_anim": target_attack_anim
 	})
 
 	# --- 2. Apply Delayed Movement ---
@@ -79,7 +87,14 @@ func _physics_process(delta):
 
 		# --- Animations ---
 		var new_anim: String
-		if not is_on_floor():
+		var delayed_attack_anim := ""
+		if delayed.has("attack_anim"):
+			delayed_attack_anim = delayed["attack_anim"]
+
+		# Prioritize attack animations so shadow mimics combo attacks.
+		if delayed_attack_anim != "":
+			new_anim = delayed_attack_anim
+		elif not is_on_floor():
 			new_anim = "Jump"
 		elif abs(velocity.x) > 0:
 			new_anim = "Running"
@@ -131,5 +146,6 @@ func reset_queue():
 		state_queue.append({
 			"position": global_position, # shadow current position, not target
 			"velocity": velocity,
-			"did_jump": false
+			"did_jump": false,
+			"attack_anim": ""
 		})
