@@ -3,6 +3,30 @@
 [ext_resource type="Texture2D" uid="uid://3bxsjo0oqy10" path="res://assets/Enemies/Shardsoul Slayer Sprite Sheet.png" id="1_3gvst"]
 [ext_resource type="Script" uid="uid://b1qlmiis63auq" path="res://scripts/enemy.gd" id="1_55jtl"]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_ksmwx"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(0, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oq86d"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(64, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_joqoj"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(128, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_govun"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(192, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hwoi6"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(256, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g512e"]
+atlas = ExtResource("1_3gvst")
+region = Rect2(320, 256, 64, 64)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_55jtl"]
 atlas = ExtResource("1_3gvst")
 region = Rect2(0, 0, 64, 64)
@@ -69,6 +93,29 @@ region = Rect2(448, 64, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_2qkhh"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ksmwx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oq86d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_joqoj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_govun")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hwoi6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g512e")
+}],
+"loop": false,
+"name": &"Death",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_55jtl")
@@ -147,7 +194,7 @@ script = ExtResource("1_55jtl")
 texture_filter = 1
 scale = Vector2(3, 3)
 sprite_frames = SubResource("SpriteFrames_2qkhh")
-animation = &"Run"
+animation = &"Death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2051862880]
 position = Vector2(-4, 53)
