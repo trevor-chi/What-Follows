@@ -21,6 +21,9 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v6fml"]
+size = Vector2(32.5, 20)
+
 [node name="Player" type="CharacterBody2D" unique_id=1071195117 groups=["player"]]
 position = Vector2(526, 242)
 collision_layer = 4
@@ -30,8 +33,10 @@ script = ExtResource("1_v6fml")
 texture_filter = 1
 scale = Vector2(1.5, 1.7)
 sprite_frames = ExtResource("2_v6fml")
-animation = &"Attack_1"
+animation = &"Attack_3"
 autoplay = "Idle"
+frame = 3
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1439900095]
 position = Vector2(-1.5, 69)
@@ -52,3 +57,12 @@ grow_horizontal = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_v6fml")
 theme_override_styles/fill = SubResource("StyleBoxFlat_3li8b")
 value = 100.0
+
+[node name="AttackArea" type="Area2D" parent="." unique_id=760829123]
+collision_layer = 128
+collision_mask = 8
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1251470130]
+position = Vector2(30.75, 44)
+shape = SubResource("RectangleShape2D_v6fml")
