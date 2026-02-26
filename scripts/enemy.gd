@@ -13,7 +13,6 @@ extends CharacterBody2D
 @onready var detection_area: Area2D = $DetectionRange
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_shape: CollisionShape2D = $AttackArea/CollisionShape2D
-@onready var body_shape: CollisionShape2D = $CollisionShape2D
 
 var target_player: CharacterBody2D = null
 var player_in_range := false
@@ -22,6 +21,7 @@ var is_dead := false
 var is_attacking := false
 var attack_cooldown_timer := 0.0
 var facing_dir := 1 # 1 right, -1 left
+var death_settled := false
 
 func _ready() -> void:
 	health = max_health
@@ -43,14 +43,23 @@ func _physics_process(delta: float) -> void:
 	if attack_cooldown_timer > 0.0:
 		attack_cooldown_timer -= delta
 
-	# Gravity so enemy follows dips/slopes.
-	if not is_on_floor():
-		velocity.y += gravity * delta
-
 	if is_dead:
-		velocity.x = 0.0
+		# Keep floor collision active so corpse does not fall through.
+		if not death_settled:
+			if not is_on_floor():
+				velocity.y += gravity * delta
+			else:
+				velocity = Vector2.ZERO
+				death_settled = true
+		else:
+			velocity = Vector2.ZERO
+
 		move_and_slide()
 		return
+
+	# Normal gravity while alive.
+	if not is_on_floor():
+		velocity.y += gravity * delta
 
 	if _target_is_dead_or_invalid():
 		_clear_target_and_stop()
@@ -137,14 +146,14 @@ func die() -> void:
 	is_attacking = false
 	target_player = null
 	player_in_range = false
-	velocity = Vector2.ZERO
+	death_settled = is_on_floor()
+
+	velocity.x = 0.0
+	if death_settled:
+		velocity.y = 0.0
 
 	detection_area.monitoring = false
 	attack_area.monitoring = false
-
-	collision_layer = 0
-	collision_mask = 0
-	body_shape.disabled = true
 
 	anim.play("Death")
 

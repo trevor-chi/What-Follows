@@ -38,6 +38,9 @@ var attack_step := 0 # 0 = none, 1..3 = combo hit
 var queued_next_attack := false
 var hit_targets_this_swing: Dictionary = {}
 
+# store key ids
+var keys: Array[String] = []
+
 func _ready() -> void:
 	anim.play("Idle")
 
@@ -247,3 +250,7 @@ func _on_animated_sprite_2d_animation_finished() -> void:
 func _on_attack_area_body_entered(_body: Node) -> void:
 	# No immediate damage; damage is applied when attack animation finishes.
 	pass
+	
+func add_key(id: String) -> void:
+	if not keys.has(id):
+		keys.append(id)

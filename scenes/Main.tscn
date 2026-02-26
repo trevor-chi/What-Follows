@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cfhuyqc3qygpv" path="res://assets/tileMapAssets/background_0.png" id="3_0bbpv"]
 [ext_resource type="PackedScene" uid="uid://c3xnrs0g6w8bx" path="res://scenes/Shadow.tscn" id="4_rarhs"]
 [ext_resource type="PackedScene" uid="uid://v8pjtnmfc34k" path="res://scenes/Enemy.tscn" id="6_c01mt"]
+[ext_resource type="PackedScene" uid="uid://c0iy8cr4ylma4" path="res://scenes/Key.tscn" id="7_nxtc6"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0bbpv"]
 texture = ExtResource("2_rvslj")
@@ -333,3 +334,8 @@ target = NodePath("../Player")
 
 [node name="Enemy" parent="." unique_id=530289679 instance=ExtResource("6_c01mt")]
 position = Vector2(791.4286, 358.4862)
+
+[node name="Key" parent="." unique_id=717407269 instance=ExtResource("7_nxtc6")]
+position = Vector2(643.5715, 37.63115)
+collision_layer = 512
+collision_mask = 4
