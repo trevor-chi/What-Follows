@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://c0bpmwotcnsrj"]
+
+[node name="GameOver" type="Control" unique_id=1176411518]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=684275457]
+modulate = Color(1.6530219e-05, 1.6530223e-05, 1.6530223e-05, 1)
+layout_mode = 1
+anchors_preset = -1
+offset_left = 3.0
+offset_right = 1155.0
+offset_bottom = 648.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.008202022, 0.008202025, 0.008202025, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1050732580]
+modulate = Color(0.98234254, 0.9823423, 0.9823424, 1)
+self_modulate = Color(0.96035105, 0.96035105, 0.96035093, 1)
+texture_filter = 1
+layout_mode = 1
+offset_left = -87.0
+offset_top = -42.0
+offset_right = 345.00003
+offset_bottom = 207.0
+scale = Vector2(3, 3)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=84432072]
+layout_mode = 2
+
+[node name="You Died" type="Label" parent="CenterContainer/VBoxContainer" unique_id=878546460]
+layout_mode = 2
+text = "You Died!"
+horizontal_alignment = 1
+
+[node name="Retry" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1606142663]
+layout_mode = 2
+text = "Press 'Enter' To Retry"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer" unique_id=50470964]
+layout_mode = 2
+text = "Press 'q' to Quit"
+horizontal_alignment = 1
+vertical_alignment = 2

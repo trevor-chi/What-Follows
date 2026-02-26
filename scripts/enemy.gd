@@ -1,9 +1,10 @@
 extends CharacterBody2D
 
 @export var speed: float = 120.0
+@export var gravity: float = 1100.0
 @export var stop_distance: float = 28.0
 @export var attack_range: float = 40.0
-@export var attack_damage: int = 10
+@export var attack_damage: int = 25
 @export var attack_cooldown: float = 1.0
 @export var attack_area_x_offset: float = 24.0
 @export var max_health: int = 3
@@ -42,13 +43,22 @@ func _physics_process(delta: float) -> void:
 	if attack_cooldown_timer > 0.0:
 		attack_cooldown_timer -= delta
 
+	# Gravity so enemy follows dips/slopes.
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
 	if is_dead:
-		velocity = Vector2.ZERO
+		velocity.x = 0.0
+		move_and_slide()
+		return
+
+	if _target_is_dead_or_invalid():
+		_clear_target_and_stop()
 		move_and_slide()
 		return
 
 	if is_attacking:
-		velocity = Vector2.ZERO
+		velocity.x = 0.0
 		move_and_slide()
 		return
 
@@ -68,16 +78,30 @@ func _physics_process(delta: float) -> void:
 			_start_attack()
 		elif abs_dx > stop_distance:
 			velocity.x = sign(dx) * speed
-			velocity.y = 0.0
 			anim.play("Run")
 		else:
-			velocity = Vector2.ZERO
+			velocity.x = 0.0
 			anim.play("Idle")
 	else:
-		velocity = Vector2.ZERO
+		velocity.x = 0.0
 		anim.play("Idle")
 
 	move_and_slide()
+
+func _target_is_dead_or_invalid() -> bool:
+	if target_player == null:
+		return false
+	if not is_instance_valid(target_player):
+		return true
+	return target_player.get("is_dead") == true
+
+func _clear_target_and_stop() -> void:
+	target_player = null
+	player_in_range = false
+	is_attacking = false
+	attack_area.monitoring = false
+	velocity.x = 0.0
+	anim.play("Idle")
 
 func _update_attack_side() -> void:
 	attack_area.position.x = attack_area_x_offset * facing_dir
@@ -87,7 +111,7 @@ func _update_attack_side() -> void:
 func _start_attack() -> void:
 	is_attacking = true
 	attack_cooldown_timer = attack_cooldown
-	velocity = Vector2.ZERO
+	velocity.x = 0.0
 	_update_attack_side()
 	attack_area.monitoring = true
 	anim.play("Attack")
@@ -95,6 +119,8 @@ func _start_attack() -> void:
 func _apply_attack_hit_to_overlaps() -> void:
 	for body in attack_area.get_overlapping_bodies():
 		if body.is_in_group("player") and body.has_method("take_damage"):
+			if body.get("is_dead") == true:
+				continue
 			body.take_damage(attack_damage)
 			break
 
@@ -124,7 +150,8 @@ func die() -> void:
 
 func _on_animation_finished() -> void:
 	if anim.animation == "Attack":
-		_apply_attack_hit_to_overlaps()
+		if not _target_is_dead_or_invalid():
+			_apply_attack_hit_to_overlaps()
 		attack_area.monitoring = false
 		is_attacking = false
 	elif anim.animation == "Death":
@@ -134,6 +161,8 @@ func _on_detection_body_entered(body: Node) -> void:
 	if is_dead:
 		return
 	if body is CharacterBody2D and body.is_in_group("player"):
+		if body.get("is_dead") == true:
+			return
 		target_player = body as CharacterBody2D
 		player_in_range = true
 

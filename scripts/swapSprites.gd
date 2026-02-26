@@ -5,6 +5,10 @@ extends Node2D
 
 var _swap_requested := false
 
+func _ready() -> void:
+	if not player.died.is_connected(_on_player_died):
+		player.died.connect(_on_player_died)
+
 func _unhandled_input(event):
 	if event.is_action_pressed("swap_sprites"):
 		_swap_requested = true
@@ -38,3 +42,7 @@ func swap_positions():
 
 	if shadow.has_method("reset_queue"):
 		shadow.reset_queue()
+
+func _on_player_died() -> void:
+	await get_tree().create_timer(1.0).timeout
+	get_tree().change_scene_to_file("res://scenes/GameOver.tscn")

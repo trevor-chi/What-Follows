@@ -66,9 +66,6 @@ func _ready() -> void:
 	if not anim.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
 		anim.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
-	if not died.is_connected(_on_died):
-		died.connect(_on_died)
-
 	attack_area.monitoring = false
 	if not attack_area.body_entered.is_connected(_on_attack_area_body_entered):
 		attack_area.body_entered.connect(_on_attack_area_body_entered)
@@ -94,7 +91,7 @@ func take_damage(amount: int) -> void:
 	health_changed.emit(health, max_health)
 
 	if health <= 0:
-		died.emit()
+		_on_died()
 
 func heal(amount: int) -> void:
 	if amount <= 0 or is_dead:
@@ -105,13 +102,18 @@ func heal(amount: int) -> void:
 	health_changed.emit(health, max_health)
 
 func _on_died() -> void:
+	if is_dead:
+		return
+
 	is_dead = true
 	is_attacking = false
 	queued_next_attack = false
 	attack_step = 0
 	attack_area.monitoring = false
 	velocity = Vector2.ZERO
-	play_anim("Death")
+
+	died.emit()
+	anim.play("Death")
 
 func start_attack(step: int) -> void:
 	if is_dead:
@@ -223,12 +225,13 @@ func _physics_process(delta: float) -> void:
 	was_on_floor = on_floor
 
 func _on_animated_sprite_2d_animation_finished() -> void:
-	if anim.animation == "Jump":
-		jump_anim_finished = true
+	if is_dead:
+		if anim.animation == "Death":
+			anim.pause()
 		return
 
-	if anim.animation == "Death":
-		anim.pause()
+	if anim.animation == "Jump":
+		jump_anim_finished = true
 		return
 
 	if anim.animation.begins_with("Attack_"):

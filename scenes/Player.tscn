@@ -33,10 +33,8 @@ script = ExtResource("1_v6fml")
 texture_filter = 1
 scale = Vector2(1.5, 1.7)
 sprite_frames = ExtResource("2_v6fml")
-animation = &"Attack_3"
+animation = &"Death"
 autoplay = "Idle"
-frame = 3
-frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1439900095]
 position = Vector2(-1.5, 69)
