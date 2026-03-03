@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dq14uiqw1742d"]
+
+[ext_resource type="Script" uid="uid://c2ctmcjm7vkbq" path="res://scripts/shadow_area.gd" id="1_gacv5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bjcus"]
+size = Vector2(124, 95)
+
+[node name="ShadowArea" type="Area2D" unique_id=1846848548]
+texture_filter = 1
+script = ExtResource("1_gacv5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1186944714]
+shape = SubResource("RectangleShape2D_bjcus")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1630484758]
+offset_left = -62.0
+offset_top = -48.0
+offset_right = 62.0
+offset_bottom = 46.0

@@ -251,6 +251,17 @@ func _on_attack_area_body_entered(_body: Node) -> void:
 	# No immediate damage; damage is applied when attack animation finishes.
 	pass
 	
+func die() -> void:
+	if is_dead:
+		return
+
+	health = 0
+	hurt_timer = 0.0
+	_update_health_bar()
+	health_changed.emit(health, max_health)
+	_on_died()
+
+	
 func add_key(id: String) -> void:
 	if not keys.has(id):
 		keys.append(id)

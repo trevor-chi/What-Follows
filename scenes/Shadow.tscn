@@ -9,9 +9,10 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lr3y3"]
 size = Vector2(23, 81)
 
-[node name="Shadow" type="CharacterBody2D" unique_id=70465667]
+[node name="Shadow" type="CharacterBody2D" unique_id=70465667 groups=["shadow"]]
 z_index = 100
 collision_layer = 4
+collision_mask = 0
 script = ExtResource("1_wxgxi")
 afterimage_scene = ExtResource("2_noxlr")
 
