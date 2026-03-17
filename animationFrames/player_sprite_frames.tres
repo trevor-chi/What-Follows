@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://bafaxwd1erpbq" path="res://assets/Raider_3/Attack_3.png" id="3_dnbic"]
 [ext_resource type="Texture2D" uid="uid://bjaculqqxu6yh" path="res://assets/Raider_3/Run.png" id="3_ovfpe"]
 [ext_resource type="Texture2D" uid="uid://q8dayenbheyk" path="res://assets/Raider_3/Dead.png" id="4_pckh8"]
+[ext_resource type="Texture2D" uid="uid://o4b443o85tnl" path="res://assets/Raider_3/Hurt.png" id="5_dnbic"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_op2ha"]
 atlas = ExtResource("1_xdymj")
@@ -79,6 +80,14 @@ region = Rect2(256, 0, 128, 128)
 [sub_resource type="AtlasTexture" id="AtlasTexture_5sq8o"]
 atlas = ExtResource("4_pckh8")
 region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vxmah"]
+atlas = ExtResource("5_dnbic")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nk3g2"]
+atlas = ExtResource("5_dnbic")
+region = Rect2(128, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_v6fml"]
 atlas = ExtResource("1_wcuc0")
@@ -243,6 +252,17 @@ animations = [{
 "loop": false,
 "name": &"Death",
 "speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vxmah")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nk3g2")
+}],
+"loop": false,
+"name": &"Hurt",
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,

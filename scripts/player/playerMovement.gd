@@ -14,9 +14,12 @@ signal died
 # Health
 @export var max_health: int = 100
 @export var hurt_invuln_time: float = 0.25
+@export var hurt_anim_duration: float = 0.2
 var health: int = 100
 var hurt_timer: float = 0.0
+var hurt_anim_timer: float = 0.0
 var is_dead: bool = false
+var is_hurt: bool = false
 
 # Smoother ground movement
 @export var accel := 2800.0
@@ -96,6 +99,18 @@ func take_damage(amount: int) -> void:
 
 	if health <= 0:
 		_on_died()
+		return
+
+	hurt_anim_timer = hurt_anim_duration
+	is_hurt = true
+	is_attacking = false
+	queued_next_attack = false
+	attack_step = 0
+	hit_targets_this_swing.clear()
+	attack_area.monitoring = false
+	velocity.x = 0.0
+
+	anim.play("Hurt")
 
 func heal(amount: int) -> void:
 	if amount <= 0 or is_dead:
@@ -110,6 +125,8 @@ func _on_died() -> void:
 		return
 
 	is_dead = true
+	is_hurt = false
+	hurt_anim_timer = 0.0
 	is_attacking = false
 	queued_next_attack = false
 	attack_step = 0
@@ -120,7 +137,7 @@ func _on_died() -> void:
 	anim.play("Death")
 
 func start_attack(step: int) -> void:
-	if is_dead:
+	if is_dead or is_hurt:
 		return
 
 	is_attacking = true
@@ -162,6 +179,22 @@ func _apply_attack_hit_to_overlaps() -> void:
 		hit_targets_this_swing[body] = true
 		body.take_damage(attack_damage)
 
+func _finish_hurt_state() -> void:
+	if not is_hurt or is_dead:
+		return
+
+	is_hurt = false
+
+	if is_on_floor():
+		var direction := Input.get_axis("move_left", "move_right")
+		if abs(direction) > 0.01:
+			play_anim("Running")
+		else:
+			play_anim("Idle")
+	else:
+		jump_anim_finished = false
+		anim.play("Jump")
+
 func _physics_process(delta: float) -> void:
 	if hurt_timer > 0.0:
 		hurt_timer -= delta
@@ -171,6 +204,23 @@ func _physics_process(delta: float) -> void:
 		if not is_on_floor():
 			velocity.y += gravity * delta
 		move_and_slide()
+		return
+
+	if is_hurt:
+		hurt_anim_timer -= delta
+
+		if not is_on_floor():
+			velocity.y += gravity * delta
+
+		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
+		move_and_slide()
+
+		anim.flip_h = facing_dir < 0
+		was_on_floor = is_on_floor()
+
+		if hurt_anim_timer <= 0.0:
+			_finish_hurt_state()
+
 		return
 
 	did_jump_this_frame = false
@@ -234,6 +284,11 @@ func _on_animated_sprite_2d_animation_finished() -> void:
 			anim.pause()
 		return
 
+	if anim.animation == "Hurt":
+		hurt_anim_timer = 0.0
+		_finish_hurt_state()
+		return
+
 	if anim.animation == "Jump":
 		jump_anim_finished = true
 		return
@@ -258,6 +313,8 @@ func die() -> void:
 
 	health = 0
 	hurt_timer = 0.0
+	hurt_anim_timer = 0.0
+	is_hurt = false
 	_update_health_bar()
 	health_changed.emit(health, max_health)
 	_on_died()
@@ -273,7 +330,7 @@ func has_key(id: String) -> bool:
 	return keys.has(id)
 
 func consume_key(id: String) -> Node:
-	var key_node := key_nodes.get(id, null) as Node
+	var key_node: Node = key_nodes.get(id, null)
 	keys.erase(id)
 	key_nodes.erase(id)
 	return key_node
