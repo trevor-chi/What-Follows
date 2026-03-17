@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://rt7gc38j1fib"]
+
+[ext_resource type="Texture2D" uid="uid://btfnb5r2xv6d6" path="res://assets/Demon_Door/!Demon Door.png" id="1_pjper"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d4um8"]
+atlas = ExtResource("1_pjper")
+region = Rect2(2160, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j54yl"]
+atlas = ExtResource("1_pjper")
+region = Rect2(2400, 0, 240, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p6pad"]
+atlas = ExtResource("1_pjper")
+region = Rect2(2640, 0, 240, 240)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wgg1m"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d4um8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j54yl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p6pad")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[node name="DoorBlackness" type="AnimatedSprite2D" unique_id=2034293126]
+sprite_frames = SubResource("SpriteFrames_wgg1m")
+animation = &"Idle"
+frame_progress = 0.86852604

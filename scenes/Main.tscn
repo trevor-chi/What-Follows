@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://v8pjtnmfc34k" path="res://scenes/Enemy.tscn" id="6_c01mt"]
 [ext_resource type="PackedScene" uid="uid://c0iy8cr4ylma4" path="res://scenes/Key.tscn" id="7_nxtc6"]
 [ext_resource type="PackedScene" uid="uid://dq14uiqw1742d" path="res://scenes/ShadowArea.tscn" id="8_jlsqs"]
+[ext_resource type="PackedScene" uid="uid://clgfeqdd0txr1" path="res://scenes/Door.tscn" id="9_q8u5g"]
+[ext_resource type="PackedScene" uid="uid://rt7gc38j1fib" path="res://scenes/DoorBlackness.tscn" id="10_lhr70"]
+[ext_resource type="Script" uid="uid://ciw07c0wiyy05" path="res://scripts/door.gd" id="10_wp0k4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0bbpv"]
 texture = ExtResource("2_rvslj")
@@ -346,3 +349,14 @@ position = Vector2(950, 194.75772)
 scale = Vector2(1.8, 1.8)
 collision_layer = 4096
 collision_mask = 4
+
+[node name="Door" parent="." unique_id=1770347977 instance=ExtResource("9_q8u5g")]
+z_index = 1
+texture_filter = 1
+position = Vector2(1150.7144, 424.50574)
+scale = Vector2(1, 0.99999994)
+script = ExtResource("10_wp0k4")
+
+[node name="DoorBlackness" parent="." unique_id=2034293126 instance=ExtResource("10_lhr70")]
+position = Vector2(1154.2858, 396.9426)
+scale = Vector2(1.0818458, 1.2667502)
