@@ -1,4 +1,7 @@
+# Enemy.gd
 extends CharacterBody2D
+
+signal defeated
 
 @export var speed: float = 300.0
 @export var gravity: float = 1100.0
@@ -20,8 +23,9 @@ var health: int
 var is_dead := false
 var is_attacking := false
 var attack_cooldown_timer := 0.0
-var facing_dir := 1 # 1 right, -1 left
+var facing_dir := 1
 var death_settled := false
+var defeat_emitted := false
 
 func _ready() -> void:
 	health = max_health
@@ -44,7 +48,6 @@ func _physics_process(delta: float) -> void:
 		attack_cooldown_timer -= delta
 
 	if is_dead:
-		# Keep floor collision active so corpse does not fall through.
 		if not death_settled:
 			if not is_on_floor():
 				velocity.y += gravity * delta
@@ -57,7 +60,6 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Normal gravity while alive.
 	if not is_on_floor():
 		velocity.y += gravity * delta
 
@@ -142,6 +144,9 @@ func take_damage(amount: int) -> void:
 		die()
 
 func die() -> void:
+	if is_dead:
+		return
+
 	is_dead = true
 	is_attacking = false
 	target_player = null
@@ -165,6 +170,9 @@ func _on_animation_finished() -> void:
 		is_attacking = false
 	elif anim.animation == "Death":
 		anim.pause()
+		if not defeat_emitted:
+			defeat_emitted = true
+			defeated.emit()
 
 func _on_detection_body_entered(body: Node) -> void:
 	if is_dead:

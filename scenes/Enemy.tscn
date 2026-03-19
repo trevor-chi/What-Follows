@@ -237,9 +237,7 @@ script = ExtResource("1_55jtl")
 texture_filter = 1
 scale = Vector2(3, 3)
 sprite_frames = SubResource("SpriteFrames_2qkhh")
-animation = &"Attack"
-frame = 4
-frame_progress = 1.0
+animation = &"Death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2051862880]
 position = Vector2(-4, 53)
