@@ -20,13 +20,12 @@ afterimage_scene = ExtResource("2_noxlr")
 modulate = Color(0, 0, 0, 0.5882353)
 texture_filter = 1
 material = SubResource("ShaderMaterial_noxlr")
-position = Vector2(135, -0.9999962)
-scale = Vector2(1.4843751, 1.7187502)
+scale = Vector2(1.5, 1.7)
 sprite_frames = ExtResource("2_lr3y3")
 animation = &"Attack_1"
 autoplay = "Idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=384731639]
 z_index = 1
-position = Vector2(134, 68)
+position = Vector2(-1.5, 69)
 shape = SubResource("RectangleShape2D_lr3y3")

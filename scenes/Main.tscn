@@ -336,7 +336,7 @@ layer_2/tile_data = PackedInt32Array(458770, 589824, 8, 458758, 589824, 8, 45875
 texture_filter = 1
 position = Vector2(1482.143, 340.00073)
 scale = Vector2(0.9999995, 0.9999995)
-collision_mask = 2
+collision_mask = 3
 target = NodePath("../Player")
 
 [node name="Enemy" parent="." unique_id=530289679 instance=ExtResource("6_c01mt")]
