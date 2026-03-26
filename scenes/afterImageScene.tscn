@@ -5,5 +5,6 @@
 [node name="AfterImageScene" type="CharacterBody2D" unique_id=1751432932]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1617342382]
+position = Vector2(0, -2)
 scale = Vector2(1.5, 1.7)
 sprite_frames = ExtResource("1_mbkjb")

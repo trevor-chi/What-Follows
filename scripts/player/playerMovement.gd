@@ -34,6 +34,7 @@ var facing_dir := 1 # 1 = right, -1 = left
 var was_on_floor := false
 var jump_anim_finished := false
 var did_jump_this_frame := false
+var move_input_dir := 0.0
 
 # Attack combo state
 var is_attacking := false
@@ -200,6 +201,7 @@ func _physics_process(delta: float) -> void:
 		hurt_timer -= delta
 
 	if is_dead:
+		move_input_dir = 0.0
 		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
 		if not is_on_floor():
 			velocity.y += gravity * delta
@@ -207,6 +209,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if is_hurt:
+		move_input_dir = 0.0
 		hurt_anim_timer -= delta
 
 		if not is_on_floor():
@@ -239,6 +242,7 @@ func _physics_process(delta: float) -> void:
 			queued_next_attack = true
 
 	var input_dir := Input.get_axis("move_left", "move_right")
+	move_input_dir = input_dir
 
 	if abs(input_dir) > 0.2:
 		facing_dir = int(sign(input_dir))
