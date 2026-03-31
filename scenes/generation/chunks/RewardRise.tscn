@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ChunkTemplate.tscn" id="1_base"]
+
+[node name="RewardRise" instance=ExtResource("1_base")]
+chunk_id = "reward_rise"
+category = "reward"
+difficulty = 3
+width_in_cells = 20
+player_solid_rects = [Rect2i(0, 10, 7, 4), Rect2i(7, 9, 4, 5), Rect2i(11, 8, 4, 6), Rect2i(15, 7, 5, 7)]
+shadow_solid_rects = [Rect2i(0, 10, 7, 4), Rect2i(7, 9, 4, 5), Rect2i(11, 8, 4, 6), Rect2i(15, 7, 5, 7)]
+entry_cell = Vector2i(0, 9)
+exit_cell = Vector2i(18, 6)
+player_spawn_cell = Vector2i(1, 9)
+shadow_spawn_cell = Vector2i(1, 9)
+key_spawn_cell = Vector2i(17, 5)

@@ -165,6 +165,18 @@ func end_attack(direction: float, on_floor: bool) -> void:
 	else:
 		play_anim("Idle")
 
+func cancel_attack_for_air() -> void:
+	if not is_attacking:
+		return
+
+	is_attacking = false
+	attack_step = 0
+	queued_next_attack = false
+	hit_targets_this_swing.clear()
+	attack_area.monitoring = false
+	jump_anim_finished = false
+	anim.play("Jump")
+
 func _update_attack_area_side() -> void:
 	attack_area.position.x = attack_area_x_offset * facing_dir
 
@@ -234,6 +246,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and Input.is_action_just_pressed("jump"):
 		velocity.y = -jumpVel
 		did_jump_this_frame = true
+		cancel_attack_for_air()
 
 	if Input.is_action_just_pressed("attack") and is_on_floor():
 		if not is_attacking:

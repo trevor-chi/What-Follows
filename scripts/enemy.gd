@@ -76,6 +76,7 @@ func _physics_process(delta: float) -> void:
 	if player_in_range and is_instance_valid(target_player):
 		var dx := target_player.global_position.x - global_position.x
 		var abs_dx := absf(dx)
+		var engage_distance := _get_engage_distance()
 
 		if dx > 0.0:
 			facing_dir = 1
@@ -85,9 +86,9 @@ func _physics_process(delta: float) -> void:
 		anim.flip_h = facing_dir < 0
 		_update_attack_side()
 
-		if abs_dx <= attack_range and attack_cooldown_timer <= 0.0:
+		if abs_dx <= engage_distance and attack_cooldown_timer <= 0.0:
 			_start_attack()
-		elif abs_dx > stop_distance:
+		elif abs_dx > engage_distance:
 			velocity.x = sign(dx) * speed
 			anim.play("Run")
 		else:
@@ -113,6 +114,38 @@ func _clear_target_and_stop() -> void:
 	attack_area.monitoring = false
 	velocity.x = 0.0
 	anim.play("Idle")
+
+func _get_engage_distance() -> float:
+	return maxf(maxf(stop_distance, attack_range), _get_combined_body_half_widths())
+
+func _get_combined_body_half_widths() -> float:
+	if not is_instance_valid(target_player):
+		return 0.0
+	return _get_body_half_width(self) + _get_body_half_width(target_player) + 4.0
+
+func _get_body_half_width(body: CharacterBody2D) -> float:
+	if body == null:
+		return 0.0
+
+	var collision_shape := body.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape == null or collision_shape.shape == null:
+		return 0.0
+
+	var scale_x := absf(collision_shape.global_scale.x)
+
+	if collision_shape.shape is RectangleShape2D:
+		var rectangle := collision_shape.shape as RectangleShape2D
+		return rectangle.size.x * 0.5 * scale_x
+
+	if collision_shape.shape is CapsuleShape2D:
+		var capsule := collision_shape.shape as CapsuleShape2D
+		return capsule.radius * scale_x
+
+	if collision_shape.shape is CircleShape2D:
+		var circle := collision_shape.shape as CircleShape2D
+		return circle.radius * scale_x
+
+	return 0.0
 
 func _update_attack_side() -> void:
 	attack_area.position.x = attack_area_x_offset * facing_dir
@@ -159,6 +192,7 @@ func die() -> void:
 
 	detection_area.monitoring = false
 	attack_area.monitoring = false
+	collision_layer = 0
 
 	anim.play("Death")
 

@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://b26py1neplhs2"]
+
+[ext_resource type="Script" uid="uid://bkqpxpwuhd0uy" path="res://scripts/generation/level_generator.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://canxmjhe525k1" path="res://scenes/generation/LevelTemplate.tscn" id="2_template"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/StartFlat.tscn" id="3_start"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathGap.tscn" id="4_path"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/CombatArena.tscn" id="5_combat"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/RewardRise.tscn" id="6_reward"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ExitLedge.tscn" id="7_exit"]
+
+[node name="LevelGenerator" type="Node" unique_id=418045773]
+script = ExtResource("1_script")
+template_scene = ExtResource("2_template")
+start_chunks = Array[PackedScene]([ExtResource("3_start")])
+path_chunks = Array[PackedScene]([ExtResource("4_path")])
+combat_chunks = Array[PackedScene]([ExtResource("5_combat")])
+reward_chunks = Array[PackedScene]([ExtResource("6_reward")])
+exit_chunks = Array[PackedScene]([ExtResource("7_exit")])

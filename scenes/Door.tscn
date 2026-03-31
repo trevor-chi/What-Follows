@@ -121,3 +121,16 @@ animation = &"Open"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1589290225]
 position = Vector2(4, -31.5)
 shape = SubResource("RectangleShape2D_yfgsh")
+
+[node name="EnterPrompt" type="Label" parent="." unique_id=163117701]
+visible = false
+offset_left = -112.0
+offset_top = -164.0
+offset_right = 120.0
+offset_bottom = -132.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 24
+text = "Press E to enter"
+horizontal_alignment = 1

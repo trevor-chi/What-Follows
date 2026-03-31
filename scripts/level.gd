@@ -3,6 +3,22 @@ extends Node2D
 
 const PLAYER_WALL_LAYER := 8
 const SHADOW_WALL_LAYER := 16
+const DOOR_PLATFORM_TILES := [
+	Vector2i(23, 1),
+	Vector2i(24, 1),
+	Vector2i(25, 1),
+	Vector2i(26, 1),
+	Vector2i(27, 1),
+]
+const KEY_PLATFORM_TILES := [
+	Vector2i(27, 5),
+	Vector2i(28, 5),
+	Vector2i(29, 5),
+	Vector2i(30, 5),
+	Vector2i(31, 5),
+	Vector2i(32, 5),
+	Vector2i(33, 5),
+]
 
 @export var player: CharacterBody2D
 @export var shadow: CharacterBody2D
@@ -17,6 +33,8 @@ const SHADOW_WALL_LAYER := 16
 @export var level_wall_thickness := 128.0
 @export var level_wall_vertical_padding := 256.0
 @export var shadow_wall_extra_margin := 0.0
+@export var door_platform_drop_rows := 2
+@export var key_platform_drop_rows := 0
 
 var _swap_requested := false
 
@@ -31,6 +49,8 @@ func _ready() -> void:
 	if key and key.has_method("set_available"):
 		key.call("set_available", false)
 
+	_lower_door_platform_section()
+	_lower_key_platform_section()
 	_setup_level_walls()
 	_configure_level_camera()
 
@@ -121,6 +141,55 @@ func _get_camera() -> Camera2D:
 
 	return player.get_node_or_null("Camera2D") as Camera2D
 
+
+func _lower_door_platform_section() -> void:
+	if door_platform_drop_rows == 0:
+		return
+
+	var tilemap := get_node_or_null("TileMapPlayer") as TileMap
+	if not tilemap or tilemap.tile_set == null:
+		return
+
+	_move_platform_tiles(tilemap, DOOR_PLATFORM_TILES, door_platform_drop_rows)
+	var drop_offset := _get_tilemap_drop_offset(tilemap, door_platform_drop_rows)
+
+	var door := get_node_or_null("Door") as Node2D
+	if door:
+		door.position += drop_offset
+
+	var door_blackness := get_node_or_null("DoorBlackness") as Node2D
+	if door_blackness:
+		door_blackness.position += drop_offset
+
+func _lower_key_platform_section() -> void:
+	if key_platform_drop_rows == 0:
+		return
+
+	var tilemap := get_node_or_null("TileMapPlayer") as TileMap
+	if not tilemap or tilemap.tile_set == null:
+		return
+
+	_move_platform_tiles(tilemap, KEY_PLATFORM_TILES, key_platform_drop_rows)
+	var drop_offset := _get_tilemap_drop_offset(tilemap, key_platform_drop_rows)
+
+	if key is Node2D:
+		(key as Node2D).position += drop_offset
+
+func _move_platform_tiles(tilemap: TileMap, platform_tiles: Array, drop_rows: int) -> void:
+	var drop_cells := Vector2i(0, drop_rows)
+	for coords in platform_tiles:
+		for layer in tilemap.get_layers_count():
+			var source_id := tilemap.get_cell_source_id(layer, coords)
+			if source_id == -1:
+				continue
+
+			var atlas_coords := tilemap.get_cell_atlas_coords(layer, coords)
+			var alternative_tile := tilemap.get_cell_alternative_tile(layer, coords)
+			tilemap.erase_cell(layer, coords)
+			tilemap.set_cell(layer, coords + drop_cells, source_id, atlas_coords, alternative_tile)
+
+func _get_tilemap_drop_offset(tilemap: TileMap, drop_rows: int) -> Vector2:
+	return Vector2(0.0, tilemap.tile_set.tile_size.y * tilemap.scale.y * drop_rows)
 
 func _setup_level_walls() -> void:
 	var level_bounds := _get_level_bounds()

@@ -1,16 +1,70 @@
-[gd_scene format=3 uid="uid://c0bpmwotcnsrj"]
+[gd_scene format=3 uid="uid://c0bpmwotcnsrj" load_steps=6]
+
+[ext_resource type="Script" path="res://scripts/game_over.gd" id="1_2v01v"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3v81u"]
+bg_color = Color(0.0588235, 0.0588235, 0.0705882, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uv628"]
+bg_color = Color(0.18, 0.18, 0.2, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ef6nu"]
+bg_color = Color(0.28, 0.28, 0.3, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_odax1"]
+bg_color = Color(0.0588235, 0.0588235, 0.0705882, 0.92)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="GameOver" type="Control" unique_id=1176411518]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2v01v")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=684275457]
 modulate = Color(1.6530219e-05, 1.6530223e-05, 1.6530223e-05, 1)
 layout_mode = 1
-anchors_preset = -1
-offset_left = 3.0
-offset_right = 1155.0
-offset_bottom = 648.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.008202022, 0.008202025, 0.008202025, 1)
@@ -20,28 +74,59 @@ modulate = Color(0.98234254, 0.9823423, 0.9823424, 1)
 self_modulate = Color(0.96035105, 0.96035105, 0.96035093, 1)
 texture_filter = 1
 layout_mode = 1
-offset_left = -87.0
-offset_top = -42.0
-offset_right = 345.00003
-offset_bottom = 207.0
-scale = Vector2(3, 3)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=84432072]
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=611224951]
 layout_mode = 2
 
-[node name="You Died" type="Label" parent="CenterContainer/VBoxContainer" unique_id=878546460]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer" unique_id=126735120]
 layout_mode = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 56
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 56
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=84432072]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="YouDied" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=878546460]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
 text = "You Died!"
 horizontal_alignment = 1
 
-[node name="Retry" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1606142663]
+[node name="RetryLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1606142663]
 layout_mode = 2
-text = "Press 'Enter' To Retry"
+theme_override_font_sizes/font_size = 34
+text = "Choose an option below"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer" unique_id=50470964]
+[node name="RetryButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=149651372]
 layout_mode = 2
-text = "Press 'q' to Quit"
-horizontal_alignment = 1
-vertical_alignment = 2
+custom_minimum_size = Vector2(340, 84)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_3v81u")
+theme_override_styles/hover = SubResource("StyleBoxFlat_uv628")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ef6nu")
+theme_override_styles/focus = SubResource("StyleBoxFlat_odax1")
+text = "Retry"
+
+[node name="QuitLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=50470964]
+layout_mode = 2
+visible = false
+
+[node name="QuitButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=205884311]
+layout_mode = 2
+custom_minimum_size = Vector2(340, 84)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_3v81u")
+theme_override_styles/hover = SubResource("StyleBoxFlat_uv628")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ef6nu")
+theme_override_styles/focus = SubResource("StyleBoxFlat_odax1")
+text = "Quit"

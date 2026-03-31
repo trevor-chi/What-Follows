@@ -209,8 +209,8 @@ script = ExtResource("1_aruhq")
 
 [node name="Key" type="AnimatedSprite2D" parent="." unique_id=1632622157]
 texture_filter = 1
-position = Vector2(1, -5)
-scale = Vector2(2, 2)
+position = Vector2(1, -16)
+scale = Vector2(2.8, 2.8)
 sprite_frames = SubResource("SpriteFrames_ppb1s")
 animation = &"Idle"
 frame_progress = 0.44239637
