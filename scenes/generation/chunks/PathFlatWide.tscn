@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ChunkTemplate.tscn" id="1_base"]
+
+[node name="PathFlatWide" instance=ExtResource("1_base")]
+chunk_id = "path_flat_wide"
+category = "path"
+difficulty = 1
+selection_weight = 8
+width_in_cells = 24
+player_solid_rects = [Rect2i(0, 10, 24, 4)]
+shadow_solid_rects = [Rect2i(0, 10, 24, 4)]
+large_tree_cells = [Vector2i(8, 1)]
+shrub_b_cells = [Vector2i(4, 9), Vector2i(17, 9)]
+rock_b_cells = [Vector2i(14, 9)]
+grass_strip_cells = [Vector2i(0, 9)]
+entry_cell = Vector2i(0, 9)
+exit_cell = Vector2i(22, 9)
+player_spawn_cell = Vector2i(1, 9)
+shadow_spawn_cell = Vector2i(1, 9)

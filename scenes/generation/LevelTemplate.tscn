@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://canxmjhe525k1"]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" uid="uid://dbv0x0ivx315m" path="res://scenes/Player.tscn" id="1_elqb8"]
 [ext_resource type="Script" uid="uid://dldkqtmi112cc" path="res://scripts/level.gd" id="1_vcsgt"]
@@ -296,6 +296,8 @@ player = NodePath("Player")
 shadow = NodePath("Shadow")
 enemy = NodePath("Enemy")
 key = NodePath("Key")
+door_platform_drop_rows = 0
+key_platform_drop_rows = 0
 
 [node name="Player" parent="." unique_id=1071195117 instance=ExtResource("1_elqb8")]
 z_index = 10

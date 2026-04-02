@@ -6,10 +6,14 @@
 chunk_id = "exit_ledge"
 category = "exit"
 difficulty = 4
+selection_weight = 1
 width_in_cells = 22
 player_solid_rects = [Rect2i(0, 10, 7, 4), Rect2i(7, 9, 4, 5), Rect2i(11, 8, 4, 6), Rect2i(15, 7, 7, 7)]
 player_platform_rects = [Rect2i(12, 5, 2, 1)]
 shadow_solid_rects = [Rect2i(0, 10, 9, 4), Rect2i(9, 8, 13, 6)]
+small_tree_cells = [Vector2i(0, 6)]
+rock_b_cells = [Vector2i(7, 8)]
+grass_strip_cells = [Vector2i(15, 6)]
 entry_cell = Vector2i(0, 9)
 exit_cell = Vector2i(20, 6)
 player_spawn_cell = Vector2i(1, 9)

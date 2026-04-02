@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ChunkTemplate.tscn" id="1_base"]
+
+[node name="PathStairsUp" instance=ExtResource("1_base")]
+chunk_id = "path_stairs_up"
+category = "path"
+difficulty = 2
+selection_weight = 1
+width_in_cells = 20
+player_solid_rects = [Rect2i(0, 10, 5, 4), Rect2i(5, 9, 4, 5), Rect2i(9, 8, 4, 6), Rect2i(13, 7, 7, 7)]
+shadow_solid_rects = [Rect2i(0, 10, 6, 4), Rect2i(6, 9, 4, 5), Rect2i(10, 8, 4, 6), Rect2i(14, 7, 6, 7)]
+small_tree_cells = [Vector2i(13, 3)]
+shrub_a_cells = [Vector2i(2, 9)]
+rock_a_cells = [Vector2i(10, 7)]
+entry_cell = Vector2i(0, 9)
+exit_cell = Vector2i(18, 6)
+player_spawn_cell = Vector2i(1, 9)
+shadow_spawn_cell = Vector2i(1, 9)

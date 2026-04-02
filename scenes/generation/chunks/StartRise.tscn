@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ChunkTemplate.tscn" id="1_base"]
+
+[node name="StartRise" instance=ExtResource("1_base")]
+chunk_id = "start_rise"
+category = "start"
+difficulty = 1
+selection_weight = 1
+width_in_cells = 18
+player_solid_rects = [Rect2i(0, 10, 6, 4), Rect2i(6, 9, 4, 5), Rect2i(10, 9, 8, 5)]
+shadow_solid_rects = [Rect2i(0, 10, 6, 4), Rect2i(6, 9, 4, 5), Rect2i(10, 9, 8, 5)]
+small_tree_cells = [Vector2i(0, 6)]
+shrub_a_cells = [Vector2i(11, 8)]
+grass_strip_cells = [Vector2i(13, 8)]
+entry_cell = Vector2i(0, 9)
+exit_cell = Vector2i(16, 8)
+player_spawn_cell = Vector2i(2, 9)
+shadow_spawn_cell = Vector2i(1, 9)

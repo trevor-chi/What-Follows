@@ -1,18 +1,29 @@
 [gd_scene format=3 uid="uid://b26py1neplhs2"]
 
 [ext_resource type="Script" uid="uid://bkqpxpwuhd0uy" path="res://scripts/generation/level_generator.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://canxmjhe525k1" path="res://scenes/generation/LevelTemplate.tscn" id="2_template"]
+[ext_resource type="PackedScene" path="res://scenes/generation/LevelTemplate.tscn" id="2_template"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/StartFlat.tscn" id="3_start"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathGap.tscn" id="4_path"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/CombatArena.tscn" id="5_combat"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/RewardRise.tscn" id="6_reward"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/ExitLedge.tscn" id="7_exit"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/StartRise.tscn" id="8_start_rise"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathFlatWide.tscn" id="9_path_flat"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathBridge.tscn" id="10_path_bridge"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathStairsUp.tscn" id="11_path_up"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathStairsDown.tscn" id="12_path_down"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/CombatUpper.tscn" id="13_combat_upper"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/RewardBridge.tscn" id="14_reward_bridge"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ExitGateFlat.tscn" id="15_exit_flat"]
 
 [node name="LevelGenerator" type="Node" unique_id=418045773]
 script = ExtResource("1_script")
 template_scene = ExtResource("2_template")
-start_chunks = Array[PackedScene]([ExtResource("3_start")])
-path_chunks = Array[PackedScene]([ExtResource("4_path")])
-combat_chunks = Array[PackedScene]([ExtResource("5_combat")])
-reward_chunks = Array[PackedScene]([ExtResource("6_reward")])
-exit_chunks = Array[PackedScene]([ExtResource("7_exit")])
+seed = 12
+extra_path_chunk_count = 1
+max_generation_attempts = 64
+start_chunks = Array[PackedScene]([ExtResource("3_start"), ExtResource("8_start_rise")])
+path_chunks = Array[PackedScene]([ExtResource("4_path"), ExtResource("9_path_flat"), ExtResource("10_path_bridge"), ExtResource("11_path_up"), ExtResource("12_path_down")])
+combat_chunks = Array[PackedScene]([ExtResource("5_combat"), ExtResource("13_combat_upper")])
+reward_chunks = Array[PackedScene]([ExtResource("6_reward"), ExtResource("14_reward_bridge")])
+exit_chunks = Array[PackedScene]([ExtResource("7_exit"), ExtResource("15_exit_flat")])
