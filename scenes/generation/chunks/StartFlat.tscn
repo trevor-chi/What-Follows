@@ -6,7 +6,7 @@
 chunk_id = "start_flat"
 category = "start"
 difficulty = 1
-selection_weight = 6
+selection_weight = 4
 width_in_cells = 18
 player_solid_rects = [Rect2i(0, 10, 18, 4)]
 shadow_solid_rects = [Rect2i(0, 10, 18, 4)]

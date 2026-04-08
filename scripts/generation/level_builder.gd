@@ -1,7 +1,9 @@
 extends RefCounted
 class_name LevelBuilder
 
+const BACKGROUND_TILE_LAYER := 0
 const PLAYER_TILE_LAYER := 1
+const FOREGROUND_TILE_LAYER := 2
 const MAX_WALK_STEP_DOWN := 1
 const MAX_JUMP_UP_CELLS := 4
 const MAX_DROP_DOWN_CELLS := 6
@@ -16,6 +18,22 @@ const PLAYER_BODY_WIDTH := 25.0
 const PLAYER_BODY_HEIGHT := 78.0
 const PLATFORM_ATLAS := Vector2i(5, 4)
 const HAZARD_ROUTE_MARGIN := 8.0
+const BACKDROP_SOURCE_ID := 1
+const BACKDROP_TOP_ATLAS := Vector2i(0, 4)
+const BACKDROP_LOWER_ATLAS := Vector2i(0, 0)
+const BACKDROP_REPEAT_WIDTH := 18
+const BACKDROP_ROW_STEP := 4
+const BACKDROP_TOP_ROW_COUNT := 4
+const BACKDROP_LOWER_ROW_COUNT := 4
+const BACKDROP_LEFT_MARGIN := 9
+const BACKDROP_TOP_OFFSET := 23
+const BACKDROP_LOWER_OFFSET := 7
+const DECOR_SOURCE_ID := 0
+const SMALL_TREE_ATLAS := Vector2i(0, 5)
+const ROCK_A_ATLAS := Vector2i(3, 3)
+const ROCK_B_ATLAS := Vector2i(3, 4)
+const SMALL_TREE_SIZE := Vector2i(4, 4)
+const SCENIC_EDGE_PADDING := 10
 
 
 func build_level(template_scene: PackedScene, chunk_scenes: Array[PackedScene], save_path: String) -> Error:
@@ -170,6 +188,12 @@ func build_level(template_scene: PackedScene, chunk_scenes: Array[PackedScene], 
 	else:
 		_disable_shadow_area(level_root)
 
+	_paint_template_backdrop(player_tilemap, shadow_tilemap)
+	_add_scenic_small_trees(
+		player_tilemap,
+		[player_spawn_cell, enemy_spawn_cell, key_spawn_cell, door_spawn_cell]
+	)
+
 	var output_dir := save_path.get_base_dir()
 	if output_dir.is_empty():
 		output_dir = "res://generated_levels"
@@ -258,6 +282,197 @@ func _disable_shadow_area(level_root: Node) -> void:
 	var collision_shape := shadow_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
+
+
+func _add_scenic_small_trees(tilemap: TileMap, avoid_cells: Array[Vector2i]) -> void:
+	var standable := _collect_standable_cells(tilemap)
+	if standable.is_empty():
+		return
+
+	var candidates := _collect_flat_surface_candidates(tilemap, standable, avoid_cells)
+	if candidates.is_empty():
+		return
+
+	var used_ranges := _collect_existing_small_tree_ranges(tilemap)
+	var rect := tilemap.get_used_rect()
+	var width := maxi(rect.size.x, 1)
+	var anchors := [
+		rect.position.x + int(round(width * 0.22)),
+		rect.position.x + int(round(width * 0.50)),
+		rect.position.x + int(round(width * 0.78)),
+	]
+
+	var existing_tree_count := used_ranges.size()
+	var desired_tree_count := 3 if width <= 48 else 4
+	var additional_tree_budget := maxi(0, desired_tree_count - existing_tree_count)
+	var small_tree_budget := mini(additional_tree_budget, anchors.size())
+	for i in range(small_tree_budget):
+		var small_surface := _pick_surface_near_anchor(tilemap, candidates, used_ranges, anchors[i], 2, 2)
+		if small_surface == Vector2i(-1, -1):
+			continue
+		var small_tree_origin := Vector2i(small_surface.x - 1, small_surface.y - 1)
+		_place_midground_tree(tilemap, small_tree_origin)
+		used_ranges.append(Vector2i(small_surface.x - 7, small_surface.x + 7))
+
+
+func _collect_existing_small_tree_ranges(tilemap: TileMap) -> Array[Vector2i]:
+	var used_ranges: Array[Vector2i] = []
+	var midground_cells: Array[Vector2i] = tilemap.get_used_cells(PLAYER_TILE_LAYER)
+	for cell in midground_cells:
+		var atlas := tilemap.get_cell_atlas_coords(PLAYER_TILE_LAYER, cell)
+		if atlas != SMALL_TREE_ATLAS:
+			continue
+		used_ranges.append(Vector2i(cell.x - 6, cell.x + 6))
+	return used_ranges
+
+
+func _paint_template_backdrop(player_tilemap: TileMap, shadow_tilemap: TileMap) -> void:
+	var standable := _collect_standable_cells(player_tilemap)
+	if standable.is_empty():
+		return
+
+	var primary_surface_y := _get_primary_surface_y(standable)
+	var rect := player_tilemap.get_used_rect()
+	var start_x := rect.position.x - BACKDROP_LEFT_MARGIN
+	var end_x := rect.end.x + BACKDROP_REPEAT_WIDTH
+
+	for x in range(start_x, end_x, BACKDROP_REPEAT_WIDTH):
+		for row in range(BACKDROP_TOP_ROW_COUNT):
+			var cell := Vector2i(x, primary_surface_y - BACKDROP_TOP_OFFSET + (row * BACKDROP_ROW_STEP))
+			player_tilemap.set_cell(BACKGROUND_TILE_LAYER, cell, BACKDROP_SOURCE_ID, BACKDROP_TOP_ATLAS)
+			shadow_tilemap.set_cell(BACKGROUND_TILE_LAYER, cell, BACKDROP_SOURCE_ID, BACKDROP_TOP_ATLAS)
+		for row in range(BACKDROP_LOWER_ROW_COUNT):
+			var cell := Vector2i(x, primary_surface_y - BACKDROP_LOWER_OFFSET + (row * BACKDROP_ROW_STEP))
+			player_tilemap.set_cell(BACKGROUND_TILE_LAYER, cell, BACKDROP_SOURCE_ID, BACKDROP_LOWER_ATLAS)
+			shadow_tilemap.set_cell(BACKGROUND_TILE_LAYER, cell, BACKDROP_SOURCE_ID, BACKDROP_LOWER_ATLAS)
+
+
+func _get_primary_surface_y(standable: Dictionary) -> int:
+	var counts_by_y := {}
+	for stand_cell_variant in standable.keys():
+		var stand_cell := stand_cell_variant as Vector2i
+		counts_by_y[stand_cell.y] = int(counts_by_y.get(stand_cell.y, 0)) + 1
+
+	var best_y := 0
+	var best_count := -1
+	for y_variant in counts_by_y.keys():
+		var y := int(y_variant)
+		var count := int(counts_by_y[y])
+		if count > best_count or (count == best_count and y < best_y):
+			best_y = y
+			best_count = count
+	return best_y
+
+
+func _collect_flat_surface_candidates(tilemap: TileMap, standable: Dictionary, avoid_cells: Array[Vector2i]) -> Array[Vector2i]:
+	var candidates: Array[Vector2i] = []
+	var cells: Array[Vector2i] = []
+	for stand_cell_variant in standable.keys():
+		cells.append(stand_cell_variant as Vector2i)
+
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		if a.x == b.x:
+			return a.y < b.y
+		return a.x < b.x
+	)
+
+	for stand_cell in cells:
+		if stand_cell.x <= SCENIC_EDGE_PADDING:
+			continue
+		if stand_cell.x >= tilemap.get_used_rect().end.x - SCENIC_EDGE_PADDING:
+			continue
+		if not _has_flat_run_global(tilemap, stand_cell, 2):
+			continue
+		var too_close := false
+		for avoid in avoid_cells:
+			if absi(avoid.x - stand_cell.x) <= 6:
+				too_close = true
+				break
+		if too_close:
+			continue
+		candidates.append(stand_cell)
+
+	return candidates
+
+
+func _pick_surface_near_anchor(tilemap: TileMap, candidates: Array[Vector2i], used_ranges: Array[Vector2i], anchor_x: int, required_half_width: int, height_tolerance: int) -> Vector2i:
+	var max_y := -99999
+	for candidate in candidates:
+		if _surface_range_is_free(candidate.x, used_ranges) and _has_flat_run_global(tilemap, candidate, required_half_width):
+			max_y = maxi(max_y, candidate.y)
+
+	var best := Vector2i(-1, -1)
+	var best_score := INF
+
+	for candidate in candidates:
+		if not _surface_range_is_free(candidate.x, used_ranges):
+			continue
+		if not _has_flat_run_global(tilemap, candidate, required_half_width):
+			continue
+		if candidate.y < max_y - height_tolerance:
+			continue
+		var score := absf(float(candidate.x - anchor_x)) + (float(max_y - candidate.y) * 12.0)
+		if score < best_score:
+			best = candidate
+			best_score = score
+
+	return best
+
+
+func _surface_range_is_free(x: int, used_ranges: Array[Vector2i]) -> bool:
+	for used_range in used_ranges:
+		if x >= used_range.x and x <= used_range.y:
+			return false
+	return true
+
+
+func _place_story_prop(tilemap: TileMap, top_left: Vector2i, size: Vector2i, atlas: Vector2i) -> void:
+	if top_left.y < 0:
+		return
+	if not _can_place_background_prop(tilemap, top_left, size):
+		return
+	tilemap.set_cell(BACKGROUND_TILE_LAYER, top_left, DECOR_SOURCE_ID, atlas)
+
+
+func _place_midground_tree(tilemap: TileMap, top_left: Vector2i) -> void:
+	if top_left.y < 0:
+		return
+	if not _can_place_midground_tree(tilemap, top_left, SMALL_TREE_SIZE):
+		return
+	tilemap.set_cell(PLAYER_TILE_LAYER, top_left, DECOR_SOURCE_ID, SMALL_TREE_ATLAS)
+
+
+func _has_flat_run_global(tilemap: TileMap, stand_cell: Vector2i, half_width: int) -> bool:
+	for x in range(stand_cell.x - half_width, stand_cell.x + half_width + 1):
+		var current := Vector2i(x, stand_cell.y)
+		if not _is_supported_actor_cell(tilemap, current):
+			return false
+	return true
+
+
+func _can_place_background_prop(tilemap: TileMap, top_left: Vector2i, size: Vector2i) -> bool:
+	var target_rect := Rect2i(top_left, size)
+	for used_cell in tilemap.get_used_cells(BACKGROUND_TILE_LAYER):
+		var atlas := tilemap.get_cell_atlas_coords(BACKGROUND_TILE_LAYER, used_cell)
+		var existing_size := Vector2i.ONE
+		if atlas == SMALL_TREE_ATLAS:
+			existing_size = SMALL_TREE_SIZE
+		elif atlas == ROCK_A_ATLAS or atlas == ROCK_B_ATLAS:
+			existing_size = Vector2i(2, 1)
+		if Rect2i(used_cell, existing_size).intersects(target_rect):
+			return false
+	return true
+
+
+func _can_place_midground_tree(tilemap: TileMap, top_left: Vector2i, size: Vector2i) -> bool:
+	var target_rect := Rect2i(top_left, size)
+	for used_cell in tilemap.get_used_cells(PLAYER_TILE_LAYER):
+		var atlas := tilemap.get_cell_atlas_coords(PLAYER_TILE_LAYER, used_cell)
+		if atlas != SMALL_TREE_ATLAS:
+			continue
+		if Rect2i(used_cell, SMALL_TREE_SIZE).intersects(target_rect):
+			return false
+	return true
 
 
 func _get_chunk_origin(previous_exit_global: Vector2i, chunk: LevelChunk) -> Vector2i:

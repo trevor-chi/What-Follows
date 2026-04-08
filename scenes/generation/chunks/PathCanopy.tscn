@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/ChunkTemplate.tscn" id="1_base"]
+
+[node name="PathCanopy" instance=ExtResource("1_base")]
+chunk_id = "path_canopy"
+category = "path"
+difficulty = 2
+selection_weight = 2
+width_in_cells = 24
+player_solid_rects = [Rect2i(0, 10, 10, 4), Rect2i(10, 9, 4, 5), Rect2i(14, 10, 10, 4)]
+shadow_solid_rects = [Rect2i(0, 10, 10, 4), Rect2i(10, 9, 4, 5), Rect2i(14, 10, 10, 4)]
+small_tree_cells = [Vector2i(17, 6)]
+large_tree_cells = [Vector2i(5, 1)]
+shrub_a_cells = [Vector2i(10, 8)]
+rock_b_cells = [Vector2i(2, 9), Vector2i(20, 9)]
+grass_strip_cells = [Vector2i(9, 9), Vector2i(14, 9)]
+entry_cell = Vector2i(0, 9)
+exit_cell = Vector2i(22, 9)
+player_spawn_cell = Vector2i(1, 9)
+shadow_spawn_cell = Vector2i(1, 9)

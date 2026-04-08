@@ -6,7 +6,7 @@
 chunk_id = "path_flat_wide"
 category = "path"
 difficulty = 1
-selection_weight = 8
+selection_weight = 2
 width_in_cells = 24
 player_solid_rects = [Rect2i(0, 10, 24, 4)]
 shadow_solid_rects = [Rect2i(0, 10, 24, 4)]

@@ -6,7 +6,7 @@
 chunk_id = "reward_rise"
 category = "reward"
 difficulty = 3
-selection_weight = 1
+selection_weight = 4
 width_in_cells = 20
 player_solid_rects = [Rect2i(0, 10, 7, 4), Rect2i(7, 9, 4, 5), Rect2i(11, 8, 4, 6), Rect2i(15, 7, 5, 7)]
 shadow_solid_rects = [Rect2i(0, 10, 7, 4), Rect2i(7, 9, 4, 5), Rect2i(11, 8, 4, 6), Rect2i(15, 7, 5, 7)]

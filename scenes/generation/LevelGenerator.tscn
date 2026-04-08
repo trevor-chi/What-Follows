@@ -15,15 +15,18 @@
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/CombatUpper.tscn" id="13_combat_upper"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/RewardBridge.tscn" id="14_reward_bridge"]
 [ext_resource type="PackedScene" path="res://scenes/generation/chunks/ExitGateFlat.tscn" id="15_exit_flat"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathCanopy.tscn" id="16_path_canopy"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/RewardSanctum.tscn" id="17_reward_sanctum"]
+[ext_resource type="PackedScene" path="res://scenes/generation/chunks/PathTrial.tscn" id="18_path_trial"]
 
 [node name="LevelGenerator" type="Node" unique_id=418045773]
 script = ExtResource("1_script")
 template_scene = ExtResource("2_template")
 seed = 12
-extra_path_chunk_count = 1
+extra_path_chunk_count = 2
 max_generation_attempts = 64
 start_chunks = Array[PackedScene]([ExtResource("3_start"), ExtResource("8_start_rise")])
-path_chunks = Array[PackedScene]([ExtResource("4_path"), ExtResource("9_path_flat"), ExtResource("10_path_bridge"), ExtResource("11_path_up"), ExtResource("12_path_down")])
+path_chunks = Array[PackedScene]([ExtResource("4_path"), ExtResource("9_path_flat"), ExtResource("10_path_bridge"), ExtResource("11_path_up"), ExtResource("12_path_down"), ExtResource("16_path_canopy"), ExtResource("18_path_trial")])
 combat_chunks = Array[PackedScene]([ExtResource("5_combat"), ExtResource("13_combat_upper")])
-reward_chunks = Array[PackedScene]([ExtResource("6_reward"), ExtResource("14_reward_bridge")])
+reward_chunks = Array[PackedScene]([ExtResource("6_reward"), ExtResource("14_reward_bridge"), ExtResource("17_reward_sanctum")])
 exit_chunks = Array[PackedScene]([ExtResource("7_exit"), ExtResource("15_exit_flat")])

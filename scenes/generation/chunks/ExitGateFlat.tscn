@@ -6,7 +6,7 @@
 chunk_id = "exit_gate_flat"
 category = "exit"
 difficulty = 3
-selection_weight = 6
+selection_weight = 2
 width_in_cells = 20
 player_solid_rects = [Rect2i(0, 10, 20, 4)]
 shadow_solid_rects = [Rect2i(0, 10, 20, 4)]

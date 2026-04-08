@@ -6,7 +6,7 @@
 chunk_id = "path_stairs_up"
 category = "path"
 difficulty = 2
-selection_weight = 1
+selection_weight = 4
 width_in_cells = 20
 player_solid_rects = [Rect2i(0, 10, 5, 4), Rect2i(5, 9, 4, 5), Rect2i(9, 8, 4, 6), Rect2i(13, 7, 7, 7)]
 shadow_solid_rects = [Rect2i(0, 10, 6, 4), Rect2i(6, 9, 4, 5), Rect2i(10, 8, 4, 6), Rect2i(14, 7, 6, 7)]
