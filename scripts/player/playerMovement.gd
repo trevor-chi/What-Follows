@@ -336,6 +336,25 @@ func die() -> void:
 	health_changed.emit(health, max_health)
 	_on_died()
 
+
+func reset_to_level_start(spawn_position: Vector2) -> void:
+	if is_dead:
+		return
+
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	move_input_dir = 0.0
+	was_on_floor = false
+	jump_anim_finished = false
+	did_jump_this_frame = false
+	is_attacking = false
+	queued_next_attack = false
+	attack_step = 0
+	hit_targets_this_swing.clear()
+	attack_area.monitoring = false
+	play_anim("Idle")
+
+
 func add_key(id: String, key_node: Node = null) -> void:
 	if not keys.has(id):
 		keys.append(id)

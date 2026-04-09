@@ -289,10 +289,12 @@ physics_layer_0/collision_mask = 0
 sources/0 = SubResource("TileSetAtlasSource_ijf54")
 sources/1 = SubResource("TileSetAtlasSource_psf0f")
 
-[node name="LevelOne" type="Node2D" unique_id=764823432 node_paths=PackedStringArray("player", "shadow")]
+[node name="LevelOne" type="Node2D" unique_id=764823432 node_paths=PackedStringArray("player", "shadow", "enemy", "key")]
 script = ExtResource("1_kvb8l")
 player = NodePath("Player")
 shadow = NodePath("Shadow")
+enemy = NodePath("Enemy")
+key = NodePath("Key")
 
 [node name="Player" parent="." unique_id=1071195117 instance=ExtResource("1_0t3xx")]
 z_index = 10
@@ -345,7 +347,7 @@ collision_layer = 512
 collision_mask = 4
 
 [node name="ShadowArea" parent="." unique_id=1846848548 instance=ExtResource("7_d0a7r")]
-position = Vector2(-185, -569)
+position = Vector2(979, 253)
 scale = Vector2(1.8, 1.8)
 collision_layer = 4096
 collision_mask = 4

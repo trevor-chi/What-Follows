@@ -289,3 +289,16 @@ func reset_queue() -> void:
 			"attack_anim": "",
 			"facing_left": facing_left
 		})
+
+
+func reset_to_level_start(spawn_position: Vector2) -> void:
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	force_fall = false
+	afterimage_timer = 0.0
+	current_animation = ""
+	reset_queue()
+
+	if shadow_sprite:
+		shadow_sprite.position.y = SHADOW_GROUNDED_SPRITE_Y
+		shadow_sprite.play("Idle")

@@ -19,6 +19,8 @@ const KEY_PLATFORM_TILES := [
 	Vector2i(32, 5),
 	Vector2i(33, 5),
 ]
+const LEVEL_ONE_SHADOW_GAP_FIX_START := Vector2i(14, 5)
+const LEVEL_ONE_SHADOW_GAP_FIX_END := Vector2i(24, 11)
 
 @export var player: CharacterBody2D
 @export var shadow: CharacterBody2D
@@ -35,8 +37,13 @@ const KEY_PLATFORM_TILES := [
 @export var shadow_wall_extra_margin := 0.0
 @export var door_platform_drop_rows := 2
 @export var key_platform_drop_rows := 0
+@export var fall_reset_margin := 256.0
 
 var _swap_requested := false
+var _player_start_position := Vector2.ZERO
+var _shadow_start_position := Vector2.ZERO
+var _fall_reset_y := INF
+var _camera_bounds := Rect2()
 
 func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
@@ -49,8 +56,14 @@ func _ready() -> void:
 	if key and key.has_method("set_available"):
 		key.call("set_available", false)
 
+	if player:
+		_player_start_position = player.global_position
+	if shadow:
+		_shadow_start_position = shadow.global_position
+
 	_lower_door_platform_section()
 	_lower_key_platform_section()
+	_fix_level_one_shadow_gap()
 	_setup_level_walls()
 	_configure_level_camera()
 
@@ -62,6 +75,9 @@ func _physics_process(delta):
 	if _swap_requested:
 		_swap_requested = false
 		swap_positions()
+
+	if _reset_on_fall():
+		return
 
 	_update_level_camera(delta)
 
@@ -102,11 +118,16 @@ func _configure_level_camera() -> void:
 	if not camera:
 		return
 
+	_camera_bounds = _get_camera_bounds()
 	camera.top_level = true
 	camera.position_smoothing_enabled = false
 	camera.limit_enabled = false
-	camera.global_position = player.global_position
 	camera.zoom = Vector2.ONE * camera_max_zoom
+	camera.global_position = _clamp_camera_position_to_bounds(
+		player.global_position,
+		get_viewport_rect().size,
+		camera.zoom
+	)
 
 
 func _update_level_camera(delta: float) -> void:
@@ -128,11 +149,15 @@ func _update_level_camera(delta: float) -> void:
 		var fit_zoom_x := viewport_size.x / maxf(span.x, 1.0)
 		var fit_zoom_y := viewport_size.y / maxf(span.y, 1.0)
 		target_zoom = clampf(minf(fit_zoom_x, fit_zoom_y), camera_min_zoom, camera_max_zoom)
+		target_zoom = _clamp_camera_zoom_to_bounds(target_zoom, viewport_size)
 
 	var position_weight := clampf(delta * camera_position_smoothing, 0.0, 1.0)
 	var zoom_weight := clampf(delta * camera_zoom_smoothing, 0.0, 1.0)
-	camera.global_position = camera.global_position.lerp(target_position, position_weight)
-	camera.zoom = camera.zoom.lerp(Vector2.ONE * target_zoom, zoom_weight)
+	var next_zoom := camera.zoom.lerp(Vector2.ONE * target_zoom, zoom_weight)
+	var clamped_target_position := _clamp_camera_position_to_bounds(target_position, viewport_size, next_zoom)
+	camera.global_position = camera.global_position.lerp(clamped_target_position, position_weight)
+	camera.global_position = _clamp_camera_position_to_bounds(camera.global_position, viewport_size, next_zoom)
+	camera.zoom = next_zoom
 
 
 func _get_camera() -> Camera2D:
@@ -140,6 +165,60 @@ func _get_camera() -> Camera2D:
 		return null
 
 	return player.get_node_or_null("Camera2D") as Camera2D
+
+
+func _get_camera_bounds() -> Rect2:
+	var bounds := Rect2()
+	var found_bounds := false
+
+	for node_name in ["TileMapPlayer", "TileMapShadow"]:
+		var tilemap := get_node_or_null(node_name) as TileMap
+		if not tilemap:
+			continue
+
+		var tilemap_bounds := _get_tilemap_bounds(tilemap, true)
+		if tilemap_bounds.size == Vector2.ZERO:
+			continue
+
+		if not found_bounds:
+			bounds = tilemap_bounds
+			found_bounds = true
+		else:
+			bounds = bounds.merge(tilemap_bounds)
+
+	return bounds
+
+
+func _clamp_camera_zoom_to_bounds(requested_zoom: float, viewport_size: Vector2) -> float:
+	if _camera_bounds.size == Vector2.ZERO or viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return requested_zoom
+
+	var bounds_zoom_x := viewport_size.x / maxf(_camera_bounds.size.x, 1.0)
+	var bounds_zoom_y := viewport_size.y / maxf(_camera_bounds.size.y, 1.0)
+	var min_bounds_zoom := maxf(bounds_zoom_x, bounds_zoom_y)
+	return clampf(maxf(requested_zoom, min_bounds_zoom), camera_min_zoom, camera_max_zoom)
+
+
+func _clamp_camera_position_to_bounds(position: Vector2, viewport_size: Vector2, zoom: Vector2) -> Vector2:
+	if _camera_bounds.size == Vector2.ZERO or viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return position
+
+	var visible_size := Vector2(
+		viewport_size.x / maxf(zoom.x, 0.0001),
+		viewport_size.y / maxf(zoom.y, 0.0001)
+	)
+	var half_view := visible_size * 0.5
+	var bounds_center := _camera_bounds.get_center()
+
+	var clamped_x := bounds_center.x
+	if _camera_bounds.size.x > visible_size.x:
+		clamped_x = clampf(position.x, _camera_bounds.position.x + half_view.x, _camera_bounds.end.x - half_view.x)
+
+	var clamped_y := bounds_center.y
+	if _camera_bounds.size.y > visible_size.y:
+		clamped_y = clampf(position.y, _camera_bounds.position.y + half_view.y, _camera_bounds.end.y - half_view.y)
+
+	return Vector2(clamped_x, clamped_y)
 
 
 func _lower_door_platform_section() -> void:
@@ -191,10 +270,31 @@ func _move_platform_tiles(tilemap: TileMap, platform_tiles: Array, drop_rows: in
 func _get_tilemap_drop_offset(tilemap: TileMap, drop_rows: int) -> Vector2:
 	return Vector2(0.0, tilemap.tile_set.tile_size.y * tilemap.scale.y * drop_rows)
 
+
+func _fix_level_one_shadow_gap() -> void:
+	if name != "LevelOne":
+		return
+
+	var player_tilemap := get_node_or_null("TileMapPlayer") as TileMap
+	var shadow_tilemap := get_node_or_null("TileMapShadow") as TileMap
+	if not player_tilemap or not shadow_tilemap:
+		return
+
+	for layer in [1, 2]:
+		_copy_tilemap_region(
+			player_tilemap,
+			shadow_tilemap,
+			layer,
+			LEVEL_ONE_SHADOW_GAP_FIX_START,
+			LEVEL_ONE_SHADOW_GAP_FIX_END
+		)
+
 func _setup_level_walls() -> void:
 	var level_bounds := _get_level_bounds()
 	if level_bounds.size == Vector2.ZERO:
 		return
+
+	_fall_reset_y = level_bounds.end.y + fall_reset_margin
 
 	var walls_root := get_node_or_null("LevelWalls") as Node2D
 	if not walls_root:
@@ -268,6 +368,59 @@ func _upsert_wall(parent: Node, wall_name: String, world_position: Vector2, wall
 	collision_shape.position = Vector2.ZERO
 
 
+func _copy_tilemap_region(source_tilemap: TileMap, target_tilemap: TileMap, layer: int, start_cell: Vector2i, end_cell: Vector2i) -> void:
+	for y in range(start_cell.y, end_cell.y + 1):
+		for x in range(start_cell.x, end_cell.x + 1):
+			var cell := Vector2i(x, y)
+			var source_id := source_tilemap.get_cell_source_id(layer, cell)
+			if source_id == -1:
+				target_tilemap.erase_cell(layer, cell)
+				continue
+
+			target_tilemap.set_cell(
+				layer,
+				cell,
+				source_id,
+				source_tilemap.get_cell_atlas_coords(layer, cell),
+				source_tilemap.get_cell_alternative_tile(layer, cell)
+			)
+
+
+func _reset_on_fall() -> bool:
+	if not is_finite(_fall_reset_y):
+		return false
+	if not player or not shadow:
+		return false
+	if player.global_position.y <= _fall_reset_y and shadow.global_position.y <= _fall_reset_y:
+		return false
+
+	_swap_requested = false
+
+	if player.has_method("reset_to_level_start"):
+		player.call("reset_to_level_start", _player_start_position)
+	else:
+		player.global_position = _player_start_position
+		player.velocity = Vector2.ZERO
+
+	if shadow.has_method("reset_to_level_start"):
+		shadow.call("reset_to_level_start", _shadow_start_position)
+	else:
+		shadow.global_position = _shadow_start_position
+		shadow.velocity = Vector2.ZERO
+		if shadow.has_method("reset_queue"):
+			shadow.call("reset_queue")
+
+	var camera := _get_camera()
+	if camera:
+		camera.global_position = _clamp_camera_position_to_bounds(
+			player.global_position,
+			get_viewport_rect().size,
+			camera.zoom
+		)
+
+	return true
+
+
 func _get_level_bounds() -> Rect2:
 	var bounds := Rect2()
 	var found_bounds := false
@@ -290,13 +443,19 @@ func _get_level_bounds() -> Rect2:
 	return bounds
 
 
-func _get_tilemap_bounds(tilemap: TileMap) -> Rect2:
+func _get_tilemap_bounds(tilemap: TileMap, include_all_layers: bool = false) -> Rect2:
 	if tilemap.tile_set == null:
 		return Rect2()
 
-	var used_cells := tilemap.get_used_cells(1)
-	if used_cells.is_empty():
-		used_cells = tilemap.get_used_cells(0)
+	var used_cells: Array[Vector2i] = []
+	if include_all_layers:
+		for layer in tilemap.get_layers_count():
+			used_cells.append_array(tilemap.get_used_cells(layer))
+	else:
+		used_cells = tilemap.get_used_cells(1)
+		if used_cells.is_empty():
+			used_cells = tilemap.get_used_cells(0)
+
 	if used_cells.is_empty():
 		return Rect2()
 
