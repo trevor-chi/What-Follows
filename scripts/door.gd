@@ -2,7 +2,7 @@ extends Area2D
 
 @export var required_key: String = "gold_key"
 @export var key_insert_offset: Vector2 = Vector2.ZERO
-@export_file("*.tscn") var next_level_scene_path := "res://scenes/NextLevel.tscn"
+@export_file("*.tscn") var next_level_scene_path := "res://scenes/LevelOne.tscn"
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var shape: CollisionShape2D = $CollisionShape2D
