@@ -35,6 +35,7 @@ var was_on_floor := false
 var jump_anim_finished := false
 var did_jump_this_frame := false
 var move_input_dir := 0.0
+var controls_enabled := true
 
 # Attack combo state
 var is_attacking := false
@@ -82,6 +83,27 @@ func _ready() -> void:
 func _update_health_bar() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = health
+
+func set_controls_enabled(enabled: bool) -> void:
+	controls_enabled = enabled
+	if enabled:
+		return
+
+	move_input_dir = 0.0
+	did_jump_this_frame = false
+	velocity.x = 0.0
+	is_attacking = false
+	queued_next_attack = false
+	attack_step = 0
+	hit_targets_this_swing.clear()
+	attack_area.monitoring = false
+
+	if not is_dead and not is_hurt:
+		if is_on_floor():
+			play_anim("Idle")
+		else:
+			jump_anim_finished = false
+			anim.play("Jump")
 
 func play_anim(name: String) -> void:
 	if anim.animation != name:
@@ -236,6 +258,27 @@ func _physics_process(delta: float) -> void:
 		if hurt_anim_timer <= 0.0:
 			_finish_hurt_state()
 
+		return
+
+	if not controls_enabled:
+		move_input_dir = 0.0
+		did_jump_this_frame = false
+
+		if not is_on_floor():
+			velocity.y += gravity * delta
+
+		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
+		move_and_slide()
+
+		var paused_on_floor := is_on_floor()
+		if paused_on_floor:
+			play_anim("Idle")
+		else:
+			jump_anim_finished = false
+			anim.play("Jump")
+
+		anim.flip_h = facing_dir < 0
+		was_on_floor = paused_on_floor
 		return
 
 	did_jump_this_frame = false

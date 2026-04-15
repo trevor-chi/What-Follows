@@ -289,6 +289,30 @@ physics_layer_0/collision_mask = 0
 sources/0 = SubResource("TileSetAtlasSource_vcsgt")
 sources/1 = SubResource("TileSetAtlasSource_c01mt")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tutorial_prompt"]
+bg_color = Color(0.0666667, 0.0745098, 0.101961, 0.94)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.87451, 0.921569, 1, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tutorial_objective"]
+bg_color = Color(0.0509804, 0.0588235, 0.0823529, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.662745, 0.776471, 0.901961, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [node name="Tutorial" type="Node2D" unique_id=983427258 node_paths=PackedStringArray("player", "shadow", "enemy", "key")]
 scale = Vector2(1.4, 1.5147027)
 script = ExtResource("1_vcsgt")
@@ -334,7 +358,7 @@ layer_2/tile_data = PackedInt32Array(458770, 589824, 8, 458758, 589824, 8, 45875
 
 [node name="Shadow" parent="." unique_id=414612508 node_paths=PackedStringArray("target") instance=ExtResource("4_rarhs")]
 texture_filter = 1
-position = Vector2(1482.143, 272.00058)
+position = Vector2(1482.143, 338.02014)
 scale = Vector2(0.9999995, 0.9999995)
 collision_mask = 3
 target = NodePath("../Player")
@@ -363,3 +387,71 @@ script = ExtResource("10_wp0k4")
 [node name="DoorBlackness" parent="." unique_id=2034293126 instance=ExtResource("10_lhr70")]
 position = Vector2(1433.5715, -5.2815647)
 scale = Vector2(1.0818458, 1.2667502)
+
+[node name="TutorialUI" type="CanvasLayer" parent="." unique_id=1750421404]
+layer = 10
+
+[node name="TutorialPrompt" type="PanelContainer" parent="TutorialUI" unique_id=1518694423]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -440.0
+offset_top = 26.0
+offset_right = 440.0
+offset_bottom = 288.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tutorial_prompt")
+
+[node name="PromptMargin" type="MarginContainer" parent="TutorialUI/TutorialPrompt" unique_id=1082293054]
+layout_mode = 2
+
+[node name="PromptStack" type="VBoxContainer" parent="TutorialUI/TutorialPrompt/PromptMargin" unique_id=1482018773]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TutorialTitle" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack" unique_id=187768719]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.929412, 0.964706, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Tutorial"
+horizontal_alignment = 1
+
+[node name="TutorialBody" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack" unique_id=1881668872]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.862745, 0.909804, 0.960784, 1)
+theme_override_font_sizes/font_size = 28
+text = "Body"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TutorialContinue" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack" unique_id=437274736]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.643137, 0.807843, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Press E to continue"
+horizontal_alignment = 1
+
+[node name="TutorialObjectivePanel" type="PanelContainer" parent="TutorialUI" unique_id=564449178]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -390.0
+offset_top = 20.0
+offset_right = 390.0
+offset_bottom = 116.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tutorial_objective")
+
+[node name="ObjectiveMargin" type="MarginContainer" parent="TutorialUI/TutorialObjectivePanel" unique_id=256961345]
+layout_mode = 2
+
+[node name="TutorialObjective" type="Label" parent="TutorialUI/TutorialObjectivePanel/ObjectiveMargin" unique_id=1337814663]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.909804, 0.956863, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Objective"
+horizontal_alignment = 1
+autowrap_mode = 3

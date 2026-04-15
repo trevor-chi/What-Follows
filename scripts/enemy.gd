@@ -27,6 +27,8 @@ var facing_dir := 1
 var death_settled := false
 var defeat_emitted := false
 var _starting_collision_layer := 0
+var ai_enabled := true
+var damage_enabled := true
 
 func _ready() -> void:
 	health = max_health
@@ -59,6 +61,16 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity = Vector2.ZERO
 
+		move_and_slide()
+		return
+
+	if not ai_enabled:
+		if not is_on_floor():
+			velocity.y += gravity * delta
+		else:
+			velocity.y = 0.0
+		velocity.x = 0.0
+		anim.play("Idle")
 		move_and_slide()
 		return
 
@@ -154,6 +166,22 @@ func _update_attack_side() -> void:
 	if attack_shape and attack_shape.shape:
 		attack_shape.position.x = absf(attack_shape.position.x) * facing_dir
 
+func set_ai_enabled(enabled: bool) -> void:
+	ai_enabled = enabled
+	if enabled or is_dead:
+		return
+
+	target_player = null
+	player_in_range = false
+	is_attacking = false
+	attack_cooldown_timer = 0.0
+	attack_area.monitoring = false
+	velocity.x = 0.0
+	anim.play("Idle")
+
+func set_damage_enabled(enabled: bool) -> void:
+	damage_enabled = enabled
+
 func _start_attack() -> void:
 	is_attacking = true
 	attack_cooldown_timer = attack_cooldown
@@ -171,7 +199,7 @@ func _apply_attack_hit_to_overlaps() -> void:
 			break
 
 func take_damage(amount: int) -> void:
-	if is_dead or amount <= 0:
+	if is_dead or amount <= 0 or not damage_enabled:
 		return
 
 	health = clampi(health - amount, 0, max_health)

@@ -20,6 +20,7 @@ const TITLE_RUN_DURATION := 2.4
 const TITLE_SHADOW_DELAY_TICKS := 72.0
 
 @export_file("*.tscn") var game_scene_path := "res://scenes/Main.tscn"
+@export_range(0.0, 1.0, 0.05) var title_swap_chance := 0.5
 
 @onready var content_margin: MarginContainer = $UI/ContentMargin
 @onready var content_column: VBoxContainer = $UI/ContentMargin/CenterContainer/ContentColumn
@@ -56,11 +57,14 @@ var _phase_deadline := 0.0
 var _attack_index := -1
 var _shadow_animation_queue: Array[Dictionary] = []
 var _stage_phase := StagePhase.IDLE
+var _sprites_swapped := false
+var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = false
+	_rng.randomize()
 
 	if not start_button.pressed.is_connected(_on_start_button_pressed):
 		start_button.pressed.connect(_on_start_button_pressed)
@@ -183,6 +187,7 @@ func _play_next_attack() -> void:
 		_schedule_shadow_animation(attack_animation)
 		return
 
+	_maybe_swap_stage_sides()
 	_start_idle_phase(TITLE_LOOP_IDLE_DURATION)
 
 
@@ -248,19 +253,7 @@ func _apply_responsive_layout() -> void:
 	_cover_sprite(far_background, viewport_size, 1.0, Vector2.ZERO)
 	_cover_sprite(mid_background, viewport_size, 1.08, Vector2.ZERO)
 	_cover_sprite(near_background, viewport_size, 1.16, Vector2.ZERO)
-
-	var center_x := viewport_size.x * 0.5
-	var stage_y := viewport_size.y * (0.62 if is_compact else 0.6)
-	var base_scale := clampf(viewport_size.y / 150.0, 3.4, 5.7)
-	var shadow_offset := viewport_size.x * (0.18 if is_compact else 0.2)
-	var hero_offset := viewport_size.x * (0.2 if is_compact else 0.22)
-
-	shadow_glow.position = Vector2(center_x - shadow_offset + 12.0, stage_y + 10.0)
-	shadow_glow.scale = Vector2(base_scale * 1.02, base_scale * 1.02)
-	shadow_sprite.position = Vector2(center_x - shadow_offset, stage_y)
-	shadow_sprite.scale = Vector2(base_scale, base_scale)
-	hero_sprite.position = Vector2(center_x + hero_offset, stage_y)
-	hero_sprite.scale = Vector2(base_scale, base_scale)
+	_apply_stage_layout(viewport_size, is_compact)
 
 	title_label.add_theme_font_size_override("font_size", 96 if is_compact else 168)
 	subtitle_label.add_theme_font_size_override("font_size", 34 if is_compact else 58)
@@ -280,6 +273,38 @@ func _apply_responsive_layout() -> void:
 	controls_panel.add_theme_constant_override("separation", 24 if is_compact else 30)
 	controls_list.add_theme_constant_override("separation", 20 if is_compact else 26)
 	action_stack.add_theme_constant_override("separation", 14 if is_compact else 20)
+
+
+func _apply_stage_layout(viewport_size: Vector2, is_compact: bool) -> void:
+	var center_x := viewport_size.x * 0.5
+	var stage_y := viewport_size.y * (0.62 if is_compact else 0.6)
+	var base_scale := clampf(viewport_size.y / 150.0, 3.4, 5.7)
+	var left_offset := viewport_size.x * (0.18 if is_compact else 0.2)
+	var right_offset := viewport_size.x * (0.2 if is_compact else 0.22)
+	var left_x := center_x - left_offset
+	var right_x := center_x + right_offset
+	var shadow_x := right_x if _sprites_swapped else left_x
+	var hero_x := left_x if _sprites_swapped else right_x
+
+	shadow_sprite.position = Vector2(shadow_x, stage_y)
+	shadow_sprite.scale = Vector2(base_scale, base_scale)
+	shadow_sprite.flip_h = _sprites_swapped
+
+	shadow_glow.position = shadow_sprite.position + Vector2(12.0, 10.0)
+	shadow_glow.scale = Vector2(base_scale * 1.02, base_scale * 1.02)
+	shadow_glow.flip_h = shadow_sprite.flip_h
+
+	hero_sprite.position = Vector2(hero_x, stage_y)
+	hero_sprite.scale = Vector2(base_scale, base_scale)
+	hero_sprite.flip_h = not _sprites_swapped
+
+
+func _maybe_swap_stage_sides() -> void:
+	if title_swap_chance <= 0.0 or _rng.randf() > title_swap_chance:
+		return
+
+	_sprites_swapped = not _sprites_swapped
+	_apply_responsive_layout()
 
 
 func _cover_sprite(sprite: Sprite2D, viewport_size: Vector2, scale_multiplier: float, offset: Vector2) -> void:

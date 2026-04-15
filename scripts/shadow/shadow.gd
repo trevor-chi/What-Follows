@@ -30,6 +30,7 @@ var afterimage_timer := 0.0
 var force_fall := false
 var min_bound_x := -INF
 var max_bound_x := INF
+var follow_enabled := true
 
 
 func _ready() -> void:
@@ -44,6 +45,21 @@ func _physics_process(delta: float) -> void:
 		_update_collision_mask()
 		velocity.y += gravity * delta
 		move_and_slide()
+		return
+
+	if not follow_enabled:
+		velocity.x = 0.0
+		_update_collision_mask()
+		if not is_on_floor():
+			velocity.y += gravity * delta
+		move_and_slide()
+		_clamp_horizontal_bounds()
+
+		if is_on_floor() and current_animation != "Idle":
+			shadow_sprite.play("Idle")
+			current_animation = "Idle"
+		shadow_sprite.flip_h = facing_left
+		shadow_sprite.position.y = SHADOW_GROUNDED_SPRITE_Y if is_on_floor() else SHADOW_AIR_SPRITE_Y
 		return
 
 	_record_target_state(delta)
@@ -223,6 +239,20 @@ func _intersect_common_solid(start: Vector2, finish: Vector2) -> Dictionary:
 func set_horizontal_bounds(left_x: float, right_x: float) -> void:
 	min_bound_x = left_x
 	max_bound_x = right_x
+
+
+func set_follow_enabled(enabled: bool) -> void:
+	follow_enabled = enabled
+	if enabled:
+		reset_queue()
+		return
+
+	velocity.x = 0.0
+	afterimage_timer = 0.0
+	reset_queue()
+	if is_on_floor():
+		shadow_sprite.play("Idle")
+		current_animation = "Idle"
 
 
 func _clamp_horizontal_bounds() -> void:

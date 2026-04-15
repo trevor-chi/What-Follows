@@ -21,21 +21,21 @@ const KEY_PLATFORM_TILES := [
 ]
 const LEVEL_ONE_SHADOW_GAP_FIX_START := Vector2i(14, 5)
 const LEVEL_ONE_SHADOW_GAP_FIX_END := Vector2i(24, 11)
-const LEVEL_TILE_LAYER := 1
-const LEVEL_TWO_MOVING_BRIDGE_CELLS := [
-	Vector2i(69, 8),
-	Vector2i(70, 8),
-	Vector2i(71, 8),
-	Vector2i(72, 8),
-	Vector2i(73, 8),
-	Vector2i(74, 8),
-	Vector2i(75, 8),
-	Vector2i(76, 8),
-]
-const LEVEL_TWO_MOVING_PLATFORM_START_STAND_CELL := Vector2i(70, 7)
-const LEVEL_TWO_MOVING_PLATFORM_END_STAND_CELL := Vector2i(75, 7)
-const LEVEL_TWO_MOVING_PLATFORM_HEIGHT := 18.0
-const MOVING_PLATFORM_SCENE := preload("res://scenes/MovingPlatform.tscn")
+
+enum TutorialStep {
+	MOVE,
+	JUMP,
+	SHADOW_ZONE,
+	SHADOW_PREP,
+	CROSS_SWAP,
+	APPROACH_ENEMY,
+	RETURN_SWAP,
+	COMBAT,
+	POST_COMBAT_SWAP,
+	KEY,
+	DOOR,
+	DONE,
+}
 
 @export var player: CharacterBody2D
 @export var shadow: CharacterBody2D
@@ -56,6 +56,14 @@ const MOVING_PLATFORM_SCENE := preload("res://scenes/MovingPlatform.tscn")
 @export var key_platform_drop_rows := 0
 @export var fall_reset_margin := 256.0
 
+@onready var _tutorial_prompt_panel := get_node_or_null("TutorialUI/TutorialPrompt") as Control
+@onready var _tutorial_title_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialTitle") as Label
+@onready var _tutorial_body_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialBody") as Label
+@onready var _tutorial_continue_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialContinue") as Label
+@onready var _tutorial_objective_panel := get_node_or_null("TutorialUI/TutorialObjectivePanel") as Control
+@onready var _tutorial_objective_label := get_node_or_null("TutorialUI/TutorialObjectivePanel/ObjectiveMargin/TutorialObjective") as Label
+@onready var _tutorial_shadow_area := get_node_or_null("ShadowArea") as Node2D
+
 var _swap_requested := false
 var _player_start_position := Vector2.ZERO
 var _shadow_start_position := Vector2.ZERO
@@ -64,7 +72,17 @@ var _key_start_position := Vector2.ZERO
 var _fall_reset_y := INF
 var _camera_bounds := Rect2()
 var _key_reveal_time_remaining := 0.0
-var _level_two_moving_platform: AnimatableBody2D = null
+var _tutorial_active := false
+var _tutorial_prompt_waiting := false
+var _tutorial_step := -1
+var _tutorial_resume_step := -1
+var _tutorial_resume_objective := ""
+var _tutorial_jump_seen := false
+var _tutorial_swap_count := 0
+var _tutorial_move_left_presses := 0
+var _tutorial_move_right_presses := 0
+var _tutorial_move_step_ready_time_ms := -1
+var _tutorial_swap_checkpoint := 0
 
 func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
@@ -85,7 +103,6 @@ func _ready() -> void:
 	_lower_door_platform_section()
 	_lower_key_platform_section()
 	_fix_level_one_shadow_gap()
-	_setup_level_two_moving_platform()
 
 	if enemy:
 		_enemy_start_position = enemy.global_position
@@ -94,8 +111,19 @@ func _ready() -> void:
 
 	_setup_level_walls()
 	_configure_level_camera()
+	_setup_tutorial()
 
 func _unhandled_input(event):
+	_record_tutorial_input(event)
+
+	if _tutorial_prompt_waiting and event.is_action_pressed("interact"):
+		_advance_tutorial_prompt()
+		get_viewport().set_input_as_handled()
+		return
+
+	if _tutorial_prompt_waiting:
+		return
+
 	if event.is_action_pressed("swap_sprites"):
 		_swap_requested = true
 
@@ -111,6 +139,8 @@ func _physics_process(delta):
 
 	if _key_reveal_time_remaining > 0.0:
 		_key_reveal_time_remaining = maxf(_key_reveal_time_remaining - delta, 0.0)
+
+	_update_tutorial_flow()
 
 func swap_positions():
 	if not player or not shadow:
@@ -136,6 +166,9 @@ func swap_positions():
 	if shadow.has_method("reset_queue"):
 		shadow.reset_queue()
 
+	if _tutorial_active:
+		_tutorial_swap_count += 1
+
 func _on_enemy_defeated() -> void:
 	if key and key.has_method("set_available"):
 		key.call("set_available", true)
@@ -146,6 +179,329 @@ func _on_enemy_defeated() -> void:
 func _on_player_died() -> void:
 	await get_tree().create_timer(1.0).timeout
 	get_tree().change_scene_to_file("res://scenes/GameOver.tscn")
+
+func _is_tutorial_level() -> bool:
+	return name == "Tutorial"
+
+
+func _setup_tutorial() -> void:
+	if not _is_tutorial_level():
+		return
+
+	_tutorial_active = true
+	_restart_tutorial()
+
+
+func _restart_tutorial() -> void:
+	if not _is_tutorial_level():
+		return
+
+	_tutorial_active = true
+	_tutorial_jump_seen = false
+	_tutorial_swap_count = 0
+	_tutorial_step = -1
+	_tutorial_resume_step = -1
+	_tutorial_resume_objective = ""
+	_tutorial_move_left_presses = 0
+	_tutorial_move_right_presses = 0
+	_tutorial_move_step_ready_time_ms = -1
+	_tutorial_swap_checkpoint = 0
+	_set_tutorial_objective("")
+	_make_tutorial_enemy_safe()
+	_set_enemy_tutorial_enabled(false)
+	_pause_tutorial(
+		TutorialStep.MOVE,
+		"Learn the Basics",
+		"A and D move.\nW jumps.\nSpace swaps places with your shadow.",
+		""
+	)
+
+
+func _pause_tutorial(next_step: int, title: String, body: String, objective_after: String) -> void:
+	_tutorial_prompt_waiting = true
+	_tutorial_resume_step = next_step
+	_tutorial_resume_objective = objective_after
+	_set_tutorial_objective("")
+	_set_tutorial_controls_locked(true)
+
+	if _tutorial_prompt_panel:
+		_tutorial_prompt_panel.visible = true
+	if _tutorial_title_label:
+		_tutorial_title_label.text = title
+	if _tutorial_body_label:
+		_tutorial_body_label.text = body
+	if _tutorial_continue_label:
+		_tutorial_continue_label.text = "Press E to continue"
+
+
+func _pause_tutorial_for_swap(next_step: int, title: String, body: String, objective_after: String) -> void:
+	_tutorial_swap_checkpoint = _tutorial_swap_count
+	_pause_tutorial(next_step, title, body, objective_after)
+
+
+func _advance_tutorial_prompt() -> void:
+	if not _tutorial_prompt_waiting:
+		return
+
+	_tutorial_prompt_waiting = false
+	_tutorial_step = _tutorial_resume_step
+	_tutorial_resume_step = -1
+
+	if _tutorial_prompt_panel:
+		_tutorial_prompt_panel.visible = false
+
+	_apply_tutorial_step_state()
+	_set_tutorial_controls_locked(false)
+	if _tutorial_step == TutorialStep.MOVE:
+		_update_move_tutorial_objective()
+	else:
+		_set_tutorial_objective(_tutorial_resume_objective)
+	_tutorial_resume_objective = ""
+
+
+func _apply_tutorial_step_state() -> void:
+	if not _is_tutorial_level():
+		return
+
+	match _tutorial_step:
+		TutorialStep.MOVE, TutorialStep.JUMP, TutorialStep.SHADOW_ZONE, TutorialStep.SHADOW_PREP, TutorialStep.CROSS_SWAP, TutorialStep.APPROACH_ENEMY, TutorialStep.RETURN_SWAP:
+			_set_enemy_tutorial_enabled(false)
+		TutorialStep.COMBAT, TutorialStep.POST_COMBAT_SWAP, TutorialStep.KEY, TutorialStep.DOOR, TutorialStep.DONE:
+			_set_enemy_tutorial_enabled(true)
+		_:
+			_set_enemy_tutorial_enabled(false)
+
+
+func _update_tutorial_flow() -> void:
+	if not _tutorial_active or _tutorial_prompt_waiting or not player:
+		return
+
+	match _tutorial_step:
+		TutorialStep.MOVE:
+			if _tutorial_move_left_presses >= 2 and _tutorial_move_right_presses >= 2:
+				if _tutorial_move_step_ready_time_ms < 0:
+					_tutorial_move_step_ready_time_ms = Time.get_ticks_msec() + 650
+					_set_tutorial_objective("Nice. You have movement down.")
+				elif Time.get_ticks_msec() >= _tutorial_move_step_ready_time_ms:
+					_pause_tutorial(
+						TutorialStep.JUMP,
+						"Jumping",
+						"Press W to jump.\nUse jumps to clear ledges and gaps.",
+						"Jump once with W."
+					)
+		TutorialStep.JUMP:
+			if player.get("did_jump_this_frame") == true:
+				_tutorial_jump_seen = true
+			if _tutorial_jump_seen and player.is_on_floor():
+				_pause_tutorial(
+					TutorialStep.SHADOW_ZONE,
+					"Shadow Zones",
+					"Shadow zones consume the player.\nYour shadow can pass through them safely.",
+					"Walk toward the shadow zone."
+				)
+		TutorialStep.SHADOW_ZONE:
+			if _tutorial_reached_shadow_zone():
+				_pause_tutorial(
+					TutorialStep.SHADOW_PREP,
+					"Cross the Shadow Zone",
+					"Keep moving until your shadow reaches the far side.\nThen you can use it to cross safely.",
+					"Move right until your shadow clears the zone."
+				)
+		TutorialStep.SHADOW_PREP:
+			if _tutorial_shadow_past_shadow_zone():
+				_pause_tutorial_for_swap(
+					TutorialStep.CROSS_SWAP,
+					"Swap Across",
+					"Your shadow is safe on the far side.\nPress Space to switch and cross the zone.",
+					"Press Space to cross the shadow zone."
+				)
+		TutorialStep.CROSS_SWAP:
+			if _tutorial_swap_count > _tutorial_swap_checkpoint and _tutorial_player_past_shadow_zone():
+				_pause_tutorial(
+					TutorialStep.APPROACH_ENEMY,
+					"Approach the Enemy",
+					"Now walk toward the enemy.\nWhen you reach it, the tutorial will tell you when to switch back.",
+					"Walk toward the enemy."
+				)
+		TutorialStep.APPROACH_ENEMY:
+			if _tutorial_ready_for_enemy_swap_back():
+				_pause_tutorial_for_swap(
+					TutorialStep.RETURN_SWAP,
+					"Switch Back",
+					"You are in position.\nPress Space to switch back before the fight.",
+					"Press Space to switch back."
+				)
+		TutorialStep.RETURN_SWAP:
+			if _tutorial_swap_count > _tutorial_swap_checkpoint:
+				_pause_tutorial(
+					TutorialStep.COMBAT,
+					"Combat",
+					"Only the player can attack.\nThe shadow cannot hurt enemies.\nUse left click to defeat the enemy.",
+					"Defeat the enemy with left click."
+				)
+		TutorialStep.COMBAT:
+			if enemy == null or enemy.get("is_dead") == true:
+				_pause_tutorial_for_swap(
+					TutorialStep.POST_COMBAT_SWAP,
+					"Switch Again",
+					"The enemy is down.\nPress Space to switch back and keep moving.",
+					"Press Space to switch back."
+				)
+		TutorialStep.POST_COMBAT_SWAP:
+			if _tutorial_swap_count > _tutorial_swap_checkpoint:
+				_pause_tutorial(
+					TutorialStep.KEY,
+					"The Key",
+					"Defeating the enemy revealed the key.\nPick it up and carry it to the exit.",
+					"Pick up the key."
+				)
+		TutorialStep.KEY:
+			if _player_has_tutorial_key():
+				_pause_tutorial(
+					TutorialStep.DOOR,
+					"The Door",
+					"Bring the key to the door to unlock it.\nThen press E to enter.",
+					"Go to the door and press E."
+				)
+		TutorialStep.DOOR:
+			if _door_is_open():
+				_tutorial_step = TutorialStep.DONE
+				_tutorial_active = false
+				_set_tutorial_objective("")
+		_:
+			pass
+
+
+func _set_tutorial_controls_locked(locked: bool) -> void:
+	if player and player.has_method("set_controls_enabled"):
+		player.call("set_controls_enabled", not locked)
+
+	if shadow and shadow.has_method("set_follow_enabled"):
+		shadow.call("set_follow_enabled", not locked)
+
+	if enemy and enemy.has_method("set_ai_enabled"):
+		enemy.call("set_ai_enabled", not locked and _tutorial_step >= TutorialStep.COMBAT)
+
+
+func _set_enemy_tutorial_enabled(enabled: bool) -> void:
+	if enemy and enemy.has_method("set_ai_enabled"):
+		enemy.call("set_ai_enabled", enabled and not _tutorial_prompt_waiting)
+	if enemy and enemy.has_method("set_damage_enabled"):
+		enemy.call("set_damage_enabled", enabled)
+
+
+func _set_tutorial_objective(text: String) -> void:
+	if not _tutorial_objective_label or not _tutorial_objective_panel:
+		return
+
+	var has_text := not text.is_empty()
+	_tutorial_objective_label.text = "Objective: %s" % text if has_text else ""
+	_tutorial_objective_label.visible = has_text
+	_tutorial_objective_panel.visible = has_text
+
+
+func _player_has_tutorial_key() -> bool:
+	return player != null and player.has_method("has_key") and player.call("has_key", "gold_key")
+
+
+func _record_tutorial_input(event: InputEvent) -> void:
+	if not _tutorial_active or _tutorial_prompt_waiting or _tutorial_step != TutorialStep.MOVE:
+		return
+	if not (event is InputEventKey):
+		return
+
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+
+	if event.is_action_pressed("move_left"):
+		_tutorial_move_left_presses += 1
+		_update_move_tutorial_objective()
+	elif event.is_action_pressed("move_right"):
+		_tutorial_move_right_presses += 1
+		_update_move_tutorial_objective()
+
+
+func _update_move_tutorial_objective() -> void:
+	if _tutorial_move_left_presses >= 2 and _tutorial_move_right_presses >= 2:
+		_set_tutorial_objective("Nice. You have movement down.")
+		return
+
+	_set_tutorial_objective(
+		"Tap A twice and D twice.  A: %d/2  D: %d/2" % [
+			mini(_tutorial_move_left_presses, 2),
+			mini(_tutorial_move_right_presses, 2),
+		]
+	)
+
+
+func _tutorial_reached_shadow_zone() -> bool:
+	if player == null:
+		return false
+	if _tutorial_shadow_area == null:
+		return player.global_position.x >= _player_start_position.x + 160.0
+
+	var collision_shape := _tutorial_shadow_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := collision_shape.shape as RectangleShape2D if collision_shape else null
+	if rectangle == null:
+		return player.global_position.x >= _tutorial_shadow_area.global_position.x - 220.0
+
+	var half_width := rectangle.size.x * 0.5 * absf(collision_shape.global_scale.x)
+	var left_edge := collision_shape.global_position.x - half_width
+	return player.global_position.x >= left_edge - 220.0
+
+
+func _tutorial_shadow_past_shadow_zone() -> bool:
+	if shadow == null:
+		return false
+
+	var right_edge := _get_tutorial_shadow_zone_right_edge()
+	if right_edge == INF:
+		return shadow.global_position.x >= _player_start_position.x + 320.0
+	return shadow.global_position.x >= right_edge + 36.0
+
+
+func _tutorial_player_past_shadow_zone() -> bool:
+	if player == null:
+		return false
+
+	var right_edge := _get_tutorial_shadow_zone_right_edge()
+	if right_edge == INF:
+		return player.global_position.x >= _player_start_position.x + 320.0
+	return player.global_position.x >= right_edge + 36.0
+
+
+func _tutorial_ready_for_enemy_swap_back() -> bool:
+	if player == null:
+		return false
+	if enemy == null:
+		return true
+	return player.global_position.x >= enemy.global_position.x - 120.0
+
+
+func _get_tutorial_shadow_zone_right_edge() -> float:
+	if _tutorial_shadow_area == null:
+		return INF
+
+	var collision_shape := _tutorial_shadow_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := collision_shape.shape as RectangleShape2D if collision_shape else null
+	if rectangle == null:
+		return INF
+
+	var half_width := rectangle.size.x * 0.5 * absf(collision_shape.global_scale.x)
+	return collision_shape.global_position.x + half_width
+
+
+func _make_tutorial_enemy_safe() -> void:
+	if enemy == null:
+		return
+	enemy.set("attack_damage", 0)
+
+
+func _door_is_open() -> bool:
+	var door := get_node_or_null("Door")
+	return door != null and door.get("is_open") == true
+
 
 func _configure_level_camera() -> void:
 	var camera := _get_camera()
@@ -340,42 +696,6 @@ func _fix_level_one_shadow_gap() -> void:
 		)
 
 
-func _setup_level_two_moving_platform() -> void:
-	if name != "LevelTwo":
-		return
-
-	var player_tilemap := get_node_or_null("TileMapPlayer") as TileMap
-	if not player_tilemap:
-		return
-
-	for bridge_cell in LEVEL_TWO_MOVING_BRIDGE_CELLS:
-		player_tilemap.erase_cell(LEVEL_TILE_LAYER, bridge_cell)
-
-	if MOVING_PLATFORM_SCENE == null:
-		return
-
-	var moving_platform := get_node_or_null("LevelTwoMovingPlatform") as AnimatableBody2D
-	if not moving_platform:
-		moving_platform = MOVING_PLATFORM_SCENE.instantiate() as AnimatableBody2D
-		if moving_platform == null:
-			return
-		moving_platform.name = "LevelTwoMovingPlatform"
-		add_child(moving_platform)
-
-	var start_floor := _get_floor_point(player_tilemap, LEVEL_TWO_MOVING_PLATFORM_START_STAND_CELL)
-	var end_floor := _get_floor_point(player_tilemap, LEVEL_TWO_MOVING_PLATFORM_END_STAND_CELL)
-	var platform_start := start_floor + Vector2(0.0, LEVEL_TWO_MOVING_PLATFORM_HEIGHT * 0.5)
-	var platform_travel := end_floor - start_floor
-	if moving_platform.has_method("configure_motion"):
-		moving_platform.call("configure_motion", platform_start, platform_travel)
-	else:
-		moving_platform.global_position = platform_start
-		moving_platform.set("travel_offset", platform_travel)
-		if moving_platform.has_method("reset_to_start"):
-			moving_platform.call("reset_to_start")
-	_level_two_moving_platform = moving_platform
-
-
 func _setup_level_walls() -> void:
 	var level_bounds := _get_level_bounds()
 	if level_bounds.size == Vector2.ZERO:
@@ -512,9 +832,6 @@ func _reset_on_fall() -> bool:
 			if key.has_method("set_available"):
 				key.call("set_available", false)
 
-	if _level_two_moving_platform and _level_two_moving_platform.has_method("reset_to_start"):
-		_level_two_moving_platform.call("reset_to_start")
-
 	var camera := _get_camera()
 	if camera:
 		camera.global_position = _clamp_camera_position_to_bounds(
@@ -524,6 +841,9 @@ func _reset_on_fall() -> bool:
 		)
 
 	_key_reveal_time_remaining = 0.0
+
+	if _is_tutorial_level():
+		_restart_tutorial()
 
 	return true
 
