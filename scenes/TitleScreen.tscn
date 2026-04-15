@@ -1,0 +1,378 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/title_screen.gd" id="1_q0vif"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_0.png" id="2_d0vxp"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_1.png" id="3_vhn4d"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_2.png" id="4_f5o4a"]
+[ext_resource type="SpriteFrames" uid="uid://l3uikmrmm4jn" path="res://animationFrames/player_sprite_frames.tres" id="5_too0w"]
+
+[sub_resource type="SystemFont" id="SystemFont_scary_title"]
+font_names = PackedStringArray("Chalkduster")
+antialiasing = 1
+subpixel_positioning = 1
+hinting = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_normal"]
+bg_color = Color(0.0862745, 0.117647, 0.184314, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.447059, 0.556863, 0.705882, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_hover"]
+bg_color = Color(0.858824, 0.654902, 0.301961, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.956863, 0.823529, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_pressed"]
+bg_color = Color(0.509804, 0.376471, 0.14902, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.996078, 0.901961, 0.690196, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
+bg_color = Color(0.0862745, 0.117647, 0.184314, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.447059, 0.556863, 0.705882, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_quit_normal"]
+bg_color = Color(0.0862745, 0.117647, 0.184314, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.447059, 0.556863, 0.705882, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_controls_card"]
+bg_color = Color(0.0196078, 0.0431373, 0.0823529, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.262745, 0.384314, 0.537255, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_key_chip"]
+bg_color = Color(0.160784, 0.239216, 0.388235, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.607843, 0.760784, 0.992157, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_idle"]
+bg_color = Color(0.0666667, 0.101961, 0.160784, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.266667, 0.380392, 0.537255, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_hover"]
+bg_color = Color(0.121569, 0.168627, 0.254902, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.654902, 0.788235, 1, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_active"]
+bg_color = Color(0.227451, 0.372549, 0.662745, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.772549, 0.882353, 1, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[node name="TitleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_q0vif")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0117647, 0.0196078, 0.0352941, 1)
+
+[node name="FarBackground" type="Sprite2D" parent="."]
+texture_filter = 1
+centered = false
+texture = ExtResource("2_d0vxp")
+
+[node name="MidBackground" type="Sprite2D" parent="."]
+texture_filter = 1
+modulate = Color(0.82, 0.84, 0.92, 0.9)
+centered = false
+texture = ExtResource("3_vhn4d")
+
+[node name="NearBackground" type="Sprite2D" parent="."]
+texture_filter = 1
+modulate = Color(0.95, 0.97, 1, 0.97)
+centered = false
+texture = ExtResource("4_f5o4a")
+
+[node name="AtmosphereOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0156863, 0.027451, 0.0470588, 0.2)
+
+[node name="TopVeil" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 220.0
+grow_horizontal = 2
+mouse_filter = 2
+color = Color(0.121569, 0.0745098, 0.027451, 0.12)
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_top = 610.0
+offset_right = 1280.0
+offset_bottom = 720.0
+mouse_filter = 2
+color = Color(0.0196078, 0.027451, 0.0431373, 0.9)
+
+[node name="FloorEdge" type="ColorRect" parent="."]
+offset_top = 604.0
+offset_right = 1280.0
+offset_bottom = 610.0
+mouse_filter = 2
+color = Color(0.882353, 0.658824, 0.290196, 0.65)
+
+[node name="Stage" type="Node2D" parent="."]
+
+[node name="ShadowGlow" type="AnimatedSprite2D" parent="Stage"]
+modulate = Color(0, 0, 0, 0.2)
+texture_filter = 1
+sprite_frames = ExtResource("5_too0w")
+animation = &"Running"
+
+[node name="ShadowSprite" type="AnimatedSprite2D" parent="Stage"]
+modulate = Color(0, 0, 0, 0.74)
+texture_filter = 1
+sprite_frames = ExtResource("5_too0w")
+animation = &"Running"
+
+[node name="HeroSprite" type="AnimatedSprite2D" parent="Stage"]
+texture_filter = 1
+flip_h = true
+sprite_frames = ExtResource("5_too0w")
+animation = &"Running"
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ContentMargin" type="MarginContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 42
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 36
+
+[node name="CenterContainer" type="CenterContainer" parent="UI/ContentMargin"]
+layout_mode = 2
+
+[node name="ContentColumn" type="VBoxContainer" parent="UI/ContentMargin/CenterContainer"]
+custom_minimum_size = Vector2(900, 0)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.730392, 0.752941, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_fonts/font = SubResource("SystemFont_scary_title")
+theme_override_font_sizes/font_size = 140
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 4
+text = "WHAT\nFOLLOWS"
+horizontal_alignment = 1
+line_spacing = -16.0
+
+[node name="Subtitle" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529412, 0.584314, 0.67451, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.45)
+theme_override_fonts/font = SubResource("SystemFont_scary_title")
+theme_override_font_sizes/font_size = 46
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 3
+text = "The path forward is narrow when your shadow refuses to stay still."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TabContent" type="MarginContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn"]
+layout_mode = 2
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="OverviewPanel" type="VBoxContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="ControlsPanel" type="VBoxContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ControlsList" type="VBoxContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MoveLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "MOVE  -  A / D"
+horizontal_alignment = 1
+
+[node name="JumpLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "JUMP  -  W"
+horizontal_alignment = 1
+
+[node name="SwapLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "SWAP  -  SPACE"
+horizontal_alignment = 1
+
+[node name="InteractLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "INTERACT  -  E"
+horizontal_alignment = 1
+
+[node name="AttackLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "ATTACK  -  LEFT CLICK"
+horizontal_alignment = 1
+
+[node name="BackCenter" type="CenterContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel"]
+layout_mode = 2
+
+[node name="BackToMainButton" type="Button" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/BackCenter"]
+custom_minimum_size = Vector2(420, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_quit_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_start_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_start_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_quit_normal")
+text = "Back To Main"
+
+[node name="ActionCenter" type="CenterContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn"]
+layout_mode = 2
+
+[node name="ActionStack" type="VBoxContainer" parent="UI/ContentMargin/CenterContainer/ContentColumn/ActionCenter"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="StartButton" type="Button" parent="UI/ContentMargin/CenterContainer/ContentColumn/ActionCenter/ActionStack"]
+custom_minimum_size = Vector2(420, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_start_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_start_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_start_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_start_normal")
+text = "Start Game"
+
+[node name="QuitButton" type="Button" parent="UI/ContentMargin/CenterContainer/ContentColumn/ActionCenter/ActionStack"]
+custom_minimum_size = Vector2(420, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_quit_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_start_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_start_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "Quit"
+
+[node name="ControlsTabButton" type="Button" parent="UI/ContentMargin/CenterContainer/ContentColumn/ActionCenter/ActionStack"]
+custom_minimum_size = Vector2(420, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_quit_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_start_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_start_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "Controls"

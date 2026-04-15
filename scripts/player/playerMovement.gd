@@ -28,7 +28,7 @@ var is_hurt: bool = false
 
 # Attack damage/hitbox settings
 @export var attack_damage: int = 1
-@export var attack_area_x_offset: float = 42.0
+@export var attack_area_x_offset: float = 50.0
 
 var facing_dir := 1 # 1 = right, -1 = left
 var was_on_floor := false
@@ -337,21 +337,30 @@ func die() -> void:
 	_on_died()
 
 
-func reset_to_level_start(spawn_position: Vector2) -> void:
-	if is_dead:
-		return
-
+func reset_to_level_start(spawn_position: Vector2, restore_full_state: bool = false) -> void:
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	move_input_dir = 0.0
 	was_on_floor = false
 	jump_anim_finished = false
 	did_jump_this_frame = false
+	hurt_timer = 0.0
+	hurt_anim_timer = 0.0
+	is_hurt = false
 	is_attacking = false
 	queued_next_attack = false
 	attack_step = 0
 	hit_targets_this_swing.clear()
 	attack_area.monitoring = false
+
+	if restore_full_state:
+		is_dead = false
+		health = max_health
+		keys.clear()
+		key_nodes.clear()
+		_update_health_bar()
+		health_changed.emit(health, max_health)
+
 	play_anim("Idle")
 
 

@@ -3,8 +3,8 @@ extends CharacterBody2D
 const SHADOW_GROUNDED_MASK := 17
 const SHADOW_FALL_MASK := 19
 const SHADOW_RISE_MASK := 18
-const SHADOW_AIR_SPRITE_Y := -2.0
-const SHADOW_GROUNDED_SPRITE_Y := 0
+const SHADOW_AIR_SPRITE_Y := -26.0
+const SHADOW_GROUNDED_SPRITE_Y := -24.0
 
 # --- Exports ---
 @export var target: CharacterBody2D

@@ -221,13 +221,13 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3gvst"]
-size = Vector2(88, 80)
+size = Vector2(106, 96)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ksmwx"]
-radius = 249.0
+radius = 299.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_55jtl"]
-size = Vector2(112.4375, 65)
+size = Vector2(135, 78)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=530289679 groups=["enemy"]]
 collision_layer = 8
@@ -235,12 +235,13 @@ script = ExtResource("1_55jtl")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=27967687]
 texture_filter = 1
-scale = Vector2(3, 3)
+position = Vector2(0, -24)
+scale = Vector2(3.6, 3.6)
 sprite_frames = SubResource("SpriteFrames_2qkhh")
 animation = &"Death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2051862880]
-position = Vector2(-4, 53)
+position = Vector2(-4, 45)
 shape = SubResource("RectangleShape2D_3gvst")
 
 [node name="DetectionRange" type="Area2D" parent="." unique_id=359963063]
@@ -248,7 +249,7 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionRange" unique_id=1828952510]
-position = Vector2(-5, 55)
+position = Vector2(-5, 47)
 shape = SubResource("CircleShape2D_ksmwx")
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1280094332]
@@ -258,5 +259,5 @@ monitoring = false
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1080883680]
-position = Vector2(50, 53)
+position = Vector2(60, 46)
 shape = SubResource("RectangleShape2D_55jtl")

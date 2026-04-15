@@ -21,6 +21,21 @@ const KEY_PLATFORM_TILES := [
 ]
 const LEVEL_ONE_SHADOW_GAP_FIX_START := Vector2i(14, 5)
 const LEVEL_ONE_SHADOW_GAP_FIX_END := Vector2i(24, 11)
+const LEVEL_TILE_LAYER := 1
+const LEVEL_TWO_MOVING_BRIDGE_CELLS := [
+	Vector2i(69, 8),
+	Vector2i(70, 8),
+	Vector2i(71, 8),
+	Vector2i(72, 8),
+	Vector2i(73, 8),
+	Vector2i(74, 8),
+	Vector2i(75, 8),
+	Vector2i(76, 8),
+]
+const LEVEL_TWO_MOVING_PLATFORM_START_STAND_CELL := Vector2i(70, 7)
+const LEVEL_TWO_MOVING_PLATFORM_END_STAND_CELL := Vector2i(75, 7)
+const LEVEL_TWO_MOVING_PLATFORM_HEIGHT := 18.0
+const MOVING_PLATFORM_SCENE := preload("res://scenes/MovingPlatform.tscn")
 
 @export var player: CharacterBody2D
 @export var shadow: CharacterBody2D
@@ -32,6 +47,8 @@ const LEVEL_ONE_SHADOW_GAP_FIX_END := Vector2i(24, 11)
 @export_range(0.0, 1.0) var camera_shadow_weight := 0.5
 @export var camera_position_smoothing := 5.0
 @export var camera_zoom_smoothing := 4.0
+@export var reveal_key_on_spawn := false
+@export var key_reveal_duration := 1.35
 @export var level_wall_thickness := 128.0
 @export var level_wall_vertical_padding := 256.0
 @export var shadow_wall_extra_margin := 0.0
@@ -42,8 +59,12 @@ const LEVEL_ONE_SHADOW_GAP_FIX_END := Vector2i(24, 11)
 var _swap_requested := false
 var _player_start_position := Vector2.ZERO
 var _shadow_start_position := Vector2.ZERO
+var _enemy_start_position := Vector2.ZERO
+var _key_start_position := Vector2.ZERO
 var _fall_reset_y := INF
 var _camera_bounds := Rect2()
+var _key_reveal_time_remaining := 0.0
+var _level_two_moving_platform: AnimatableBody2D = null
 
 func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
@@ -64,6 +85,13 @@ func _ready() -> void:
 	_lower_door_platform_section()
 	_lower_key_platform_section()
 	_fix_level_one_shadow_gap()
+	_setup_level_two_moving_platform()
+
+	if enemy:
+		_enemy_start_position = enemy.global_position
+	if key is Node2D:
+		_key_start_position = (key as Node2D).global_position
+
 	_setup_level_walls()
 	_configure_level_camera()
 
@@ -80,6 +108,9 @@ func _physics_process(delta):
 		return
 
 	_update_level_camera(delta)
+
+	if _key_reveal_time_remaining > 0.0:
+		_key_reveal_time_remaining = maxf(_key_reveal_time_remaining - delta, 0.0)
 
 func swap_positions():
 	if not player or not shadow:
@@ -108,6 +139,9 @@ func swap_positions():
 func _on_enemy_defeated() -> void:
 	if key and key.has_method("set_available"):
 		key.call("set_available", true)
+
+	if reveal_key_on_spawn and key is Node2D:
+		_key_reveal_time_remaining = key_reveal_duration
 
 func _on_player_died() -> void:
 	await get_tree().create_timer(1.0).timeout
@@ -151,6 +185,15 @@ func _update_level_camera(delta: float) -> void:
 		target_zoom = clampf(minf(fit_zoom_x, fit_zoom_y), camera_min_zoom, camera_max_zoom)
 		target_zoom = _clamp_camera_zoom_to_bounds(target_zoom, viewport_size)
 
+		if _key_reveal_time_remaining > 0.0 and key is Node2D:
+			var key_pos := (key as Node2D).global_position
+			target_position = player_pos.lerp(key_pos, 0.5)
+			var reveal_span := (player_pos - key_pos).abs() + (camera_padding * 2.0)
+			var reveal_zoom_x := viewport_size.x / maxf(reveal_span.x, 1.0)
+			var reveal_zoom_y := viewport_size.y / maxf(reveal_span.y, 1.0)
+			target_zoom = clampf(minf(reveal_zoom_x, reveal_zoom_y), camera_min_zoom, camera_max_zoom)
+			target_zoom = _clamp_camera_zoom_to_bounds(target_zoom, viewport_size)
+
 	var position_weight := clampf(delta * camera_position_smoothing, 0.0, 1.0)
 	var zoom_weight := clampf(delta * camera_zoom_smoothing, 0.0, 1.0)
 	var next_zoom := camera.zoom.lerp(Vector2.ONE * target_zoom, zoom_weight)
@@ -187,6 +230,13 @@ func _get_camera_bounds() -> Rect2:
 			bounds = bounds.merge(tilemap_bounds)
 
 	return bounds
+
+
+func _get_floor_point(tilemap: TileMap, stand_cell: Vector2i) -> Vector2:
+	var tile_size := tilemap.tile_set.tile_size
+	var stand_center_local := tilemap.map_to_local(stand_cell)
+	var floor_local := stand_center_local + Vector2(0.0, float(tile_size.y) * 0.5)
+	return tilemap.to_global(floor_local)
 
 
 func _clamp_camera_zoom_to_bounds(requested_zoom: float, viewport_size: Vector2) -> float:
@@ -288,6 +338,43 @@ func _fix_level_one_shadow_gap() -> void:
 			LEVEL_ONE_SHADOW_GAP_FIX_START,
 			LEVEL_ONE_SHADOW_GAP_FIX_END
 		)
+
+
+func _setup_level_two_moving_platform() -> void:
+	if name != "LevelTwo":
+		return
+
+	var player_tilemap := get_node_or_null("TileMapPlayer") as TileMap
+	if not player_tilemap:
+		return
+
+	for bridge_cell in LEVEL_TWO_MOVING_BRIDGE_CELLS:
+		player_tilemap.erase_cell(LEVEL_TILE_LAYER, bridge_cell)
+
+	if MOVING_PLATFORM_SCENE == null:
+		return
+
+	var moving_platform := get_node_or_null("LevelTwoMovingPlatform") as AnimatableBody2D
+	if not moving_platform:
+		moving_platform = MOVING_PLATFORM_SCENE.instantiate() as AnimatableBody2D
+		if moving_platform == null:
+			return
+		moving_platform.name = "LevelTwoMovingPlatform"
+		add_child(moving_platform)
+
+	var start_floor := _get_floor_point(player_tilemap, LEVEL_TWO_MOVING_PLATFORM_START_STAND_CELL)
+	var end_floor := _get_floor_point(player_tilemap, LEVEL_TWO_MOVING_PLATFORM_END_STAND_CELL)
+	var platform_start := start_floor + Vector2(0.0, LEVEL_TWO_MOVING_PLATFORM_HEIGHT * 0.5)
+	var platform_travel := end_floor - start_floor
+	if moving_platform.has_method("configure_motion"):
+		moving_platform.call("configure_motion", platform_start, platform_travel)
+	else:
+		moving_platform.global_position = platform_start
+		moving_platform.set("travel_offset", platform_travel)
+		if moving_platform.has_method("reset_to_start"):
+			moving_platform.call("reset_to_start")
+	_level_two_moving_platform = moving_platform
+
 
 func _setup_level_walls() -> void:
 	var level_bounds := _get_level_bounds()
@@ -397,7 +484,7 @@ func _reset_on_fall() -> bool:
 	_swap_requested = false
 
 	if player.has_method("reset_to_level_start"):
-		player.call("reset_to_level_start", _player_start_position)
+		player.call("reset_to_level_start", _player_start_position, true)
 	else:
 		player.global_position = _player_start_position
 		player.velocity = Vector2.ZERO
@@ -410,6 +497,24 @@ func _reset_on_fall() -> bool:
 		if shadow.has_method("reset_queue"):
 			shadow.call("reset_queue")
 
+	if enemy:
+		if enemy.has_method("reset_to_level_start"):
+			enemy.call("reset_to_level_start", _enemy_start_position)
+		else:
+			enemy.global_position = _enemy_start_position
+			enemy.velocity = Vector2.ZERO
+
+	if key is Node2D:
+		if key.has_method("reset_to_level_start"):
+			key.call("reset_to_level_start", _key_start_position, false)
+		else:
+			(key as Node2D).global_position = _key_start_position
+			if key.has_method("set_available"):
+				key.call("set_available", false)
+
+	if _level_two_moving_platform and _level_two_moving_platform.has_method("reset_to_start"):
+		_level_two_moving_platform.call("reset_to_start")
+
 	var camera := _get_camera()
 	if camera:
 		camera.global_position = _clamp_camera_position_to_bounds(
@@ -417,6 +522,8 @@ func _reset_on_fall() -> bool:
 			get_viewport_rect().size,
 			camera.zoom
 		)
+
+	_key_reveal_time_remaining = 0.0
 
 	return true
 

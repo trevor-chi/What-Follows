@@ -134,3 +134,16 @@ func _start_bobbing() -> void:
 	landing_tween = null
 	if visible and not collected and not being_used:
 		bobbing_enabled = true
+
+
+func reset_to_level_start(spawn_position: Vector2, available: bool = false) -> void:
+	holder = null
+	collected = false
+	being_used = false
+	resting_position = spawn_position
+	global_position = spawn_position
+	bob_time = 0.0
+	scale = Vector2.ONE
+	sprite.scale = base_sprite_scale
+	sprite.modulate = Color.WHITE
+	set_available(available)

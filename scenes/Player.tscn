@@ -4,7 +4,7 @@
 [ext_resource type="SpriteFrames" uid="uid://l3uikmrmm4jn" path="res://animationFrames/player_sprite_frames.tres" id="2_v6fml"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_p0vlq"]
-size = Vector2(25, 78)
+size = Vector2(30, 93.6)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v6fml"]
 bg_color = Color(0.43185103, 0.43184647, 0.4467224, 1)
@@ -22,7 +22,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v6fml"]
-size = Vector2(32.5, 20)
+size = Vector2(39, 24)
 
 [node name="Player" type="CharacterBody2D" unique_id=1071195117 groups=["player"]]
 position = Vector2(526, 242)
@@ -32,17 +32,18 @@ script = ExtResource("1_v6fml")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1784368217]
 texture_filter = 1
-scale = Vector2(1.5, 1.7)
+position = Vector2(0, -22)
+scale = Vector2(1.8, 2.04)
 sprite_frames = ExtResource("2_v6fml")
 animation = &"Idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1439900095]
-position = Vector2(-1.5, 69)
+position = Vector2(-1.5, 61.2)
 shape = SubResource("RectangleShape2D_p0vlq")
 
 [node name="HealthBarPivot" type="Node2D" parent="." unique_id=486630011]
 modulate = Color(0.09786251, 0.8068469, 0.32505092, 1)
-position = Vector2(0, -30)
+position = Vector2(0, -42)
 
 [node name="HealthBar" type="ProgressBar" parent="HealthBarPivot" unique_id=1386366231]
 anchors_preset = 5
@@ -62,5 +63,5 @@ collision_mask = 8
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=1251470130]
-position = Vector2(30.75, 44)
+position = Vector2(38, 36)
 shape = SubResource("RectangleShape2D_v6fml")

@@ -5,11 +5,11 @@ signal defeated
 
 @export var speed: float = 300.0
 @export var gravity: float = 1100.0
-@export var stop_distance: float = 28.0
-@export var attack_range: float = 40.0
+@export var stop_distance: float = 34.0
+@export var attack_range: float = 48.0
 @export var attack_damage: int = 25
 @export var attack_cooldown: float = 1.0
-@export var attack_area_x_offset: float = 24.0
+@export var attack_area_x_offset: float = 30.0
 @export var max_health: int = 3
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
@@ -26,9 +26,11 @@ var attack_cooldown_timer := 0.0
 var facing_dir := 1
 var death_settled := false
 var defeat_emitted := false
+var _starting_collision_layer := 0
 
 func _ready() -> void:
 	health = max_health
+	_starting_collision_layer = collision_layer
 	anim.play("Idle")
 
 	detection_area.monitoring = true
@@ -221,3 +223,23 @@ func _on_detection_body_exited(body: Node) -> void:
 	if body == target_player:
 		target_player = null
 		player_in_range = false
+
+
+func reset_to_level_start(spawn_position: Vector2) -> void:
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	health = max_health
+	is_dead = false
+	is_attacking = false
+	player_in_range = false
+	target_player = null
+	attack_cooldown_timer = 0.0
+	death_settled = false
+	defeat_emitted = false
+	collision_layer = _starting_collision_layer
+	detection_area.monitoring = true
+	attack_area.monitoring = false
+	anim.flip_h = false
+	facing_dir = 1
+	_update_attack_side()
+	anim.play("Idle")
