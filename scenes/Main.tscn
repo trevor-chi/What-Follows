@@ -413,7 +413,7 @@ theme_override_constants/separation = 14
 [node name="TutorialTitle" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack" unique_id=187768719]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.929412, 0.964706, 1, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 28
 text = "Tutorial"
 horizontal_alignment = 1
 
@@ -432,26 +432,53 @@ theme_override_font_sizes/font_size = 24
 text = "Press E to continue"
 horizontal_alignment = 1
 
+[node name="ObjectiveStack" type="VBoxContainer" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack" unique_id=959273447]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ObjectiveTitle" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack/ObjectiveStack" unique_id=1571846061]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.717647, 0.862745, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Objective:"
+horizontal_alignment = 1
+
+[node name="TutorialObjective" type="Label" parent="TutorialUI/TutorialPrompt/PromptMargin/PromptStack/ObjectiveStack" unique_id=1337814663]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.909804, 0.956863, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Objective"
+horizontal_alignment = 1
+autowrap_mode = 3
+
 [node name="TutorialObjectivePanel" type="PanelContainer" parent="TutorialUI" unique_id=564449178]
 visible = false
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -390.0
+offset_left = 24.0
 offset_top = 20.0
-offset_right = 390.0
-offset_bottom = 116.0
-grow_horizontal = 2
+offset_right = 484.0
+offset_bottom = 152.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_tutorial_objective")
 
 [node name="ObjectiveMargin" type="MarginContainer" parent="TutorialUI/TutorialObjectivePanel" unique_id=256961345]
 layout_mode = 2
 
-[node name="TutorialObjective" type="Label" parent="TutorialUI/TutorialObjectivePanel/ObjectiveMargin" unique_id=1337814663]
+[node name="ObjectiveStack" type="VBoxContainer" parent="TutorialUI/TutorialObjectivePanel/ObjectiveMargin" unique_id=1376265902]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ObjectiveTitle" type="Label" parent="TutorialUI/TutorialObjectivePanel/ObjectiveMargin/ObjectiveStack" unique_id=779936021]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.717647, 0.862745, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Objective:"
+
+[node name="TutorialObjective" type="Label" parent="TutorialUI/TutorialObjectivePanel/ObjectiveMargin/ObjectiveStack" unique_id=1005785076]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.909804, 0.956863, 1, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
 text = "Objective"
-horizontal_alignment = 1
 autowrap_mode = 3

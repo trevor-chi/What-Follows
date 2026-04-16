@@ -55,13 +55,15 @@ enum TutorialStep {
 @export var door_platform_drop_rows := 2
 @export var key_platform_drop_rows := 0
 @export var fall_reset_margin := 256.0
+@export var tutorial_prompt_display_time := 3.5
 
 @onready var _tutorial_prompt_panel := get_node_or_null("TutorialUI/TutorialPrompt") as Control
 @onready var _tutorial_title_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialTitle") as Label
 @onready var _tutorial_body_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialBody") as Label
 @onready var _tutorial_continue_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialContinue") as Label
-@onready var _tutorial_objective_panel := get_node_or_null("TutorialUI/TutorialObjectivePanel") as Control
-@onready var _tutorial_objective_label := get_node_or_null("TutorialUI/TutorialObjectivePanel/ObjectiveMargin/TutorialObjective") as Label
+@onready var _tutorial_objective_stack := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/ObjectiveStack") as Control
+@onready var _tutorial_objective_title_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/ObjectiveStack/ObjectiveTitle") as Label
+@onready var _tutorial_objective_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/ObjectiveStack/TutorialObjective") as Label
 @onready var _tutorial_shadow_area := get_node_or_null("ShadowArea") as Node2D
 
 var _swap_requested := false
@@ -83,6 +85,8 @@ var _tutorial_move_left_presses := 0
 var _tutorial_move_right_presses := 0
 var _tutorial_move_step_ready_time_ms := -1
 var _tutorial_swap_checkpoint := 0
+var _tutorial_prompt_time_remaining := 0.0
+var _tutorial_prompt_active := false
 
 func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
@@ -114,15 +118,10 @@ func _ready() -> void:
 	_setup_tutorial()
 
 func _unhandled_input(event):
+	if _tutorial_prompt_active:
+		return
+
 	_record_tutorial_input(event)
-
-	if _tutorial_prompt_waiting and event.is_action_pressed("interact"):
-		_advance_tutorial_prompt()
-		get_viewport().set_input_as_handled()
-		return
-
-	if _tutorial_prompt_waiting:
-		return
 
 	if event.is_action_pressed("swap_sprites"):
 		_swap_requested = true
@@ -135,12 +134,17 @@ func _physics_process(delta):
 	if _reset_on_fall():
 		return
 
-	_update_level_camera(delta)
-
 	if _key_reveal_time_remaining > 0.0:
 		_key_reveal_time_remaining = maxf(_key_reveal_time_remaining - delta, 0.0)
 
+	if _tutorial_prompt_time_remaining > 0.0:
+		_tutorial_prompt_time_remaining = maxf(_tutorial_prompt_time_remaining - delta, 0.0)
+		if _tutorial_prompt_time_remaining <= 0.0:
+			_advance_tutorial_prompt()
+
 	_update_tutorial_flow()
+	_enforce_tutorial_shadow_zone_block()
+	_update_level_camera(delta)
 
 func swap_positions():
 	if not player or not shadow:
@@ -206,6 +210,9 @@ func _restart_tutorial() -> void:
 	_tutorial_move_right_presses = 0
 	_tutorial_move_step_ready_time_ms = -1
 	_tutorial_swap_checkpoint = 0
+	_tutorial_prompt_waiting = false
+	_tutorial_prompt_time_remaining = 0.0
+	_tutorial_prompt_active = false
 	_set_tutorial_objective("")
 	_make_tutorial_enemy_safe()
 	_set_enemy_tutorial_enabled(false)
@@ -218,10 +225,13 @@ func _restart_tutorial() -> void:
 
 
 func _pause_tutorial(next_step: int, title: String, body: String, objective_after: String) -> void:
-	_tutorial_prompt_waiting = true
-	_tutorial_resume_step = next_step
-	_tutorial_resume_objective = objective_after
-	_set_tutorial_objective("")
+	_tutorial_prompt_waiting = false
+	_tutorial_resume_step = -1
+	_tutorial_resume_objective = ""
+	_tutorial_step = next_step
+	_tutorial_prompt_time_remaining = tutorial_prompt_display_time
+	_tutorial_prompt_active = true
+	_swap_requested = false
 	_set_tutorial_controls_locked(true)
 
 	if _tutorial_prompt_panel:
@@ -231,7 +241,15 @@ func _pause_tutorial(next_step: int, title: String, body: String, objective_afte
 	if _tutorial_body_label:
 		_tutorial_body_label.text = body
 	if _tutorial_continue_label:
-		_tutorial_continue_label.text = "Press E to continue"
+		_tutorial_continue_label.visible = false
+		_tutorial_continue_label.text = ""
+
+	_apply_tutorial_step_state()
+	if _tutorial_step == TutorialStep.MOVE:
+		_set_tutorial_objective("")
+	else:
+		_set_tutorial_objective(objective_after)
+	_refresh_tutorial_prompt_panel()
 
 
 func _pause_tutorial_for_swap(next_step: int, title: String, body: String, objective_after: String) -> void:
@@ -240,23 +258,17 @@ func _pause_tutorial_for_swap(next_step: int, title: String, body: String, objec
 
 
 func _advance_tutorial_prompt() -> void:
-	if not _tutorial_prompt_waiting:
+	if not _tutorial_prompt_active:
 		return
 
 	_tutorial_prompt_waiting = false
-	_tutorial_step = _tutorial_resume_step
-	_tutorial_resume_step = -1
-
-	if _tutorial_prompt_panel:
-		_tutorial_prompt_panel.visible = false
-
+	_tutorial_prompt_time_remaining = 0.0
+	_tutorial_prompt_active = false
 	_apply_tutorial_step_state()
 	_set_tutorial_controls_locked(false)
 	if _tutorial_step == TutorialStep.MOVE:
 		_update_move_tutorial_objective()
-	else:
-		_set_tutorial_objective(_tutorial_resume_objective)
-	_tutorial_resume_objective = ""
+	_refresh_tutorial_prompt_panel()
 
 
 func _apply_tutorial_step_state() -> void:
@@ -273,14 +285,14 @@ func _apply_tutorial_step_state() -> void:
 
 
 func _update_tutorial_flow() -> void:
-	if not _tutorial_active or _tutorial_prompt_waiting or not player:
+	if not _tutorial_active or _tutorial_prompt_waiting or _tutorial_prompt_active or not player:
 		return
 
 	match _tutorial_step:
 		TutorialStep.MOVE:
 			if _tutorial_move_left_presses >= 2 and _tutorial_move_right_presses >= 2:
 				if _tutorial_move_step_ready_time_ms < 0:
-					_tutorial_move_step_ready_time_ms = Time.get_ticks_msec() + 650
+					_tutorial_move_step_ready_time_ms = Time.get_ticks_msec() + 3000
 					_set_tutorial_objective("Nice. You have movement down.")
 				elif Time.get_ticks_msec() >= _tutorial_move_step_ready_time_ms:
 					_pause_tutorial(
@@ -301,18 +313,10 @@ func _update_tutorial_flow() -> void:
 				)
 		TutorialStep.SHADOW_ZONE:
 			if _tutorial_reached_shadow_zone():
-				_pause_tutorial(
-					TutorialStep.SHADOW_PREP,
-					"Cross the Shadow Zone",
-					"Keep moving until your shadow reaches the far side.\nThen you can use it to cross safely.",
-					"Move right until your shadow clears the zone."
-				)
-		TutorialStep.SHADOW_PREP:
-			if _tutorial_shadow_past_shadow_zone():
 				_pause_tutorial_for_swap(
 					TutorialStep.CROSS_SWAP,
 					"Swap Across",
-					"Your shadow is safe on the far side.\nPress Space to switch and cross the zone.",
+					"Your shadow is in position.\nPress Space to switch and cross the zone.",
 					"Press Space to cross the shadow zone."
 				)
 		TutorialStep.CROSS_SWAP:
@@ -385,19 +389,18 @@ func _set_tutorial_controls_locked(locked: bool) -> void:
 
 func _set_enemy_tutorial_enabled(enabled: bool) -> void:
 	if enemy and enemy.has_method("set_ai_enabled"):
-		enemy.call("set_ai_enabled", enabled and not _tutorial_prompt_waiting)
+		enemy.call("set_ai_enabled", enabled and not _tutorial_prompt_waiting and not _tutorial_prompt_active)
 	if enemy and enemy.has_method("set_damage_enabled"):
-		enemy.call("set_damage_enabled", enabled)
+		enemy.call("set_damage_enabled", enabled and not _tutorial_prompt_active)
 
 
 func _set_tutorial_objective(text: String) -> void:
-	if not _tutorial_objective_label or not _tutorial_objective_panel:
+	if not _tutorial_objective_label or not _tutorial_objective_title_label:
 		return
 
 	var has_text := not text.is_empty()
-	_tutorial_objective_label.text = "Objective: %s" % text if has_text else ""
-	_tutorial_objective_label.visible = has_text
-	_tutorial_objective_panel.visible = has_text
+	_tutorial_objective_label.text = text if has_text else ""
+	_refresh_tutorial_prompt_panel()
 
 
 func _player_has_tutorial_key() -> bool:
@@ -405,7 +408,7 @@ func _player_has_tutorial_key() -> bool:
 
 
 func _record_tutorial_input(event: InputEvent) -> void:
-	if not _tutorial_active or _tutorial_prompt_waiting or _tutorial_step != TutorialStep.MOVE:
+	if not _tutorial_active or _tutorial_prompt_waiting or _tutorial_prompt_active or _tutorial_step != TutorialStep.MOVE:
 		return
 	if not (event is InputEventKey):
 		return
@@ -435,19 +438,63 @@ func _update_move_tutorial_objective() -> void:
 	)
 
 
+func _refresh_tutorial_prompt_panel() -> void:
+	if _tutorial_prompt_panel == null:
+		return
+
+	var has_objective := _tutorial_objective_label != null and not _tutorial_objective_label.text.is_empty()
+	var show_objective := has_objective and not _tutorial_prompt_active
+	_tutorial_prompt_panel.visible = _tutorial_prompt_active or show_objective
+
+	if _tutorial_title_label:
+		_tutorial_title_label.visible = _tutorial_prompt_active
+	if _tutorial_body_label:
+		_tutorial_body_label.visible = _tutorial_prompt_active
+	if _tutorial_continue_label:
+		_tutorial_continue_label.visible = false
+	if _tutorial_objective_stack:
+		_tutorial_objective_stack.visible = show_objective
+	if _tutorial_objective_title_label:
+		_tutorial_objective_title_label.visible = show_objective
+	if _tutorial_objective_label:
+		_tutorial_objective_label.visible = show_objective
+
+
+func _enforce_tutorial_shadow_zone_block() -> void:
+	if not _tutorial_should_block_shadow_zone_entry():
+		return
+	if player == null:
+		return
+
+	var left_edge := _get_tutorial_shadow_zone_left_edge()
+	if left_edge == INF:
+		return
+
+	var max_player_x := left_edge - 20.0
+	if player.global_position.x <= max_player_x:
+		return
+
+	player.global_position.x = max_player_x
+	player.velocity.x = minf(player.velocity.x, 0.0)
+
+
+func _tutorial_should_block_shadow_zone_entry() -> bool:
+	if not _tutorial_active:
+		return false
+	if _tutorial_step != TutorialStep.SHADOW_ZONE and _tutorial_step != TutorialStep.CROSS_SWAP:
+		return false
+	return not _tutorial_player_past_shadow_zone()
+
+
 func _tutorial_reached_shadow_zone() -> bool:
 	if player == null:
 		return false
 	if _tutorial_shadow_area == null:
 		return player.global_position.x >= _player_start_position.x + 160.0
 
-	var collision_shape := _tutorial_shadow_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
-	var rectangle := collision_shape.shape as RectangleShape2D if collision_shape else null
-	if rectangle == null:
+	var left_edge := _get_tutorial_shadow_zone_left_edge()
+	if left_edge == INF:
 		return player.global_position.x >= _tutorial_shadow_area.global_position.x - 220.0
-
-	var half_width := rectangle.size.x * 0.5 * absf(collision_shape.global_scale.x)
-	var left_edge := collision_shape.global_position.x - half_width
 	return player.global_position.x >= left_edge - 220.0
 
 
@@ -474,9 +521,20 @@ func _tutorial_player_past_shadow_zone() -> bool:
 func _tutorial_ready_for_enemy_swap_back() -> bool:
 	if player == null:
 		return false
-	if enemy == null:
-		return true
-	return player.global_position.x >= enemy.global_position.x - 120.0
+	return _tutorial_player_past_shadow_zone() and _tutorial_shadow_past_shadow_zone()
+
+
+func _get_tutorial_shadow_zone_left_edge() -> float:
+	if _tutorial_shadow_area == null:
+		return INF
+
+	var collision_shape := _tutorial_shadow_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var rectangle := collision_shape.shape as RectangleShape2D if collision_shape else null
+	if rectangle == null:
+		return INF
+
+	var half_width := rectangle.size.x * 0.5 * absf(collision_shape.global_scale.x)
+	return collision_shape.global_position.x - half_width
 
 
 func _get_tutorial_shadow_zone_right_edge() -> float:
