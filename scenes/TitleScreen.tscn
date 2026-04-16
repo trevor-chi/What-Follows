@@ -296,7 +296,7 @@ theme_override_constants/separation = 16
 layout_mode = 2
 theme_override_colors/font_color = Color(0.923529, 0.952941, 1, 1)
 theme_override_font_sizes/font_size = 46
-text = "MOVE  -  A / D"
+text = "MOVE LEFT AND RIGHT WITH A AND D"
 horizontal_alignment = 1
 
 [node name="JumpLine" type="Label" parent="UI/ContentMargin/CenterContainer/ContentColumn/TabContent/ControlsPanel/ControlsList"]

@@ -26,7 +26,11 @@ func _physics_process(_delta: float) -> void:
 
 	if Input.is_action_just_pressed("interact"):
 		is_entering = true
-		get_tree().change_scene_to_file(next_level_scene_path)
+		var scene_transition := get_node_or_null("/root/SceneTransition")
+		if scene_transition != null and scene_transition.has_method("change_scene_with_transition"):
+			scene_transition.call("change_scene_with_transition", next_level_scene_path)
+		else:
+			get_tree().change_scene_to_file(next_level_scene_path)
 
 func _on_body_entered(body: Node) -> void:
 	if not body.is_in_group("player"):

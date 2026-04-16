@@ -43,7 +43,7 @@ shape = SubResource("RectangleShape2D_p0vlq")
 
 [node name="HealthBarPivot" type="Node2D" parent="." unique_id=486630011]
 modulate = Color(0.09786251, 0.8068469, 0.32505092, 1)
-position = Vector2(0, -42)
+position = Vector2(0, -58)
 
 [node name="HealthBar" type="ProgressBar" parent="HealthBarPivot" unique_id=1386366231]
 anchors_preset = 5

@@ -431,7 +431,7 @@ func _update_move_tutorial_objective() -> void:
 		return
 
 	_set_tutorial_objective(
-		"Tap A twice and D twice.  A: %d/2  D: %d/2" % [
+		"Move with A and D.  A: %d/2  D: %d/2" % [
 			mini(_tutorial_move_left_presses, 2),
 			mini(_tutorial_move_right_presses, 2),
 		]
