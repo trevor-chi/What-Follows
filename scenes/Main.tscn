@@ -378,13 +378,14 @@ collision_layer = 4096
 collision_mask = 4
 
 [node name="Door" parent="." unique_id=1770347977 instance=ExtResource("9_q8u5g")]
-z_index = 1
+z_index = 10
 texture_filter = 1
 position = Vector2(1424.2858, 29.048601)
 scale = Vector2(1, 0.99999994)
 script = ExtResource("10_wp0k4")
 
 [node name="DoorBlackness" parent="." unique_id=2034293126 instance=ExtResource("10_lhr70")]
+z_index = 9
 position = Vector2(1432.1428, -3.9611735)
 scale = Vector2(1.0818458, 1.2667502)
 

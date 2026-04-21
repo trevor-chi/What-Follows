@@ -230,6 +230,7 @@ radius = 299.0
 size = Vector2(135, 78)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=530289679 groups=["enemy"]]
+z_index = 10
 collision_layer = 8
 script = ExtResource("1_55jtl")
 

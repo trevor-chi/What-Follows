@@ -26,6 +26,7 @@ size = Vector2(39, 24)
 
 [node name="Player" type="CharacterBody2D" unique_id=1071195117 groups=["player"]]
 position = Vector2(526, 242)
+z_index = 10
 collision_layer = 4
 collision_mask = 9
 script = ExtResource("1_v6fml")

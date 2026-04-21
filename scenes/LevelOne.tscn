@@ -299,7 +299,7 @@ reveal_key_on_spawn = true
 door_platform_drop_rows = 0
 
 [node name="Door" parent="." unique_id=1770347977 instance=ExtResource("8_m5dbj")]
-z_index = 1
+z_index = 10
 position = Vector2(2737, 420)
 next_level_scene_path = "res://scenes/NextLevel.tscn"
 
@@ -351,4 +351,5 @@ position = Vector2(2279, -673)
 position = Vector2(1534, 355)
 
 [node name="DoorBlackness" parent="." unique_id=2034293126 instance=ExtResource("10_kqpdr")]
+z_index = 9
 position = Vector2(2736, 381)
