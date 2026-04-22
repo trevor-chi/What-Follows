@@ -322,7 +322,6 @@ enemy = NodePath("Enemy")
 key = NodePath("Key")
 
 [node name="Player" parent="." unique_id=1071195117 instance=ExtResource("1_elqb8")]
-z_index = 10
 position = Vector2(-612.8572, 339.34055)
 scale = Vector2(1.0053122, 1)
 

@@ -20,6 +20,7 @@ var hurt_timer: float = 0.0
 var hurt_anim_timer: float = 0.0
 var is_dead: bool = false
 var is_hurt: bool = false
+var damage_enabled := true
 
 # Smoother ground movement
 @export var accel := 2800.0
@@ -105,12 +106,15 @@ func set_controls_enabled(enabled: bool) -> void:
 			jump_anim_finished = false
 			anim.play("Jump")
 
+func set_damage_enabled(enabled: bool) -> void:
+	damage_enabled = enabled
+
 func play_anim(name: String) -> void:
 	if anim.animation != name:
 		anim.play(name)
 
 func take_damage(amount: int) -> void:
-	if amount <= 0 or is_dead:
+	if amount <= 0 or is_dead or not damage_enabled:
 		return
 	if hurt_timer > 0.0:
 		return

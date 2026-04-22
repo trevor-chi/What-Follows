@@ -70,10 +70,13 @@ var _swap_requested := false
 var _player_start_position := Vector2.ZERO
 var _shadow_start_position := Vector2.ZERO
 var _enemy_start_position := Vector2.ZERO
+var _level_enemies: Array[CharacterBody2D] = []
+var _enemy_start_positions: Dictionary = {}
 var _key_start_position := Vector2.ZERO
 var _fall_reset_y := INF
 var _camera_bounds := Rect2()
 var _key_reveal_time_remaining := 0.0
+var _key_has_been_revealed := false
 var _tutorial_active := false
 var _tutorial_prompt_waiting := false
 var _tutorial_step := -1
@@ -92,9 +95,7 @@ func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
 		player.died.connect(_on_player_died)
 
-	if enemy and enemy.has_signal("defeated"):
-		if not enemy.defeated.is_connected(_on_enemy_defeated):
-			enemy.defeated.connect(_on_enemy_defeated)
+	_cache_level_enemies()
 
 	if key and key.has_method("set_available"):
 		key.call("set_available", false)
@@ -108,14 +109,15 @@ func _ready() -> void:
 	_lower_key_platform_section()
 	_fix_level_one_shadow_gap()
 
-	if enemy:
-		_enemy_start_position = enemy.global_position
 	if key is Node2D:
 		_key_start_position = (key as Node2D).global_position
 
 	_setup_level_walls()
 	_configure_level_camera()
 	_setup_tutorial()
+	_set_player_damage_enabled(not _is_tutorial_level())
+
+	_update_key_reveal_state()
 
 func _unhandled_input(event):
 	if _tutorial_prompt_active:
@@ -174,11 +176,7 @@ func swap_positions():
 		_tutorial_swap_count += 1
 
 func _on_enemy_defeated() -> void:
-	if key and key.has_method("set_available"):
-		key.call("set_available", true)
-
-	if reveal_key_on_spawn and key is Node2D:
-		_key_reveal_time_remaining = key_reveal_duration
+	_update_key_reveal_state()
 
 func _on_player_died() -> void:
 	await get_tree().create_timer(1.0).timeout
@@ -388,10 +386,18 @@ func _set_tutorial_controls_locked(locked: bool) -> void:
 
 
 func _set_enemy_tutorial_enabled(enabled: bool) -> void:
-	if enemy and enemy.has_method("set_ai_enabled"):
-		enemy.call("set_ai_enabled", enabled and not _tutorial_prompt_waiting and not _tutorial_prompt_active)
-	if enemy and enemy.has_method("set_damage_enabled"):
-		enemy.call("set_damage_enabled", enabled and not _tutorial_prompt_active)
+	for level_enemy in _level_enemies:
+		if level_enemy == null or not is_instance_valid(level_enemy):
+			continue
+		if level_enemy.has_method("set_ai_enabled"):
+			level_enemy.call("set_ai_enabled", enabled and not _tutorial_prompt_waiting and not _tutorial_prompt_active)
+		if level_enemy.has_method("set_damage_enabled"):
+			level_enemy.call("set_damage_enabled", enabled and not _tutorial_prompt_active)
+
+
+func _set_player_damage_enabled(enabled: bool) -> void:
+	if player and player.has_method("set_damage_enabled"):
+		player.call("set_damage_enabled", enabled)
 
 
 func _set_tutorial_objective(text: String) -> void:
@@ -551,9 +557,7 @@ func _get_tutorial_shadow_zone_right_edge() -> float:
 
 
 func _make_tutorial_enemy_safe() -> void:
-	if enemy == null:
-		return
-	enemy.set("attack_damage", 0)
+	_set_player_damage_enabled(false)
 
 
 func _door_is_open() -> bool:
@@ -875,12 +879,16 @@ func _reset_on_fall() -> bool:
 		if shadow.has_method("reset_queue"):
 			shadow.call("reset_queue")
 
-	if enemy:
-		if enemy.has_method("reset_to_level_start"):
-			enemy.call("reset_to_level_start", _enemy_start_position)
+	for level_enemy in _level_enemies:
+		if level_enemy == null or not is_instance_valid(level_enemy):
+			continue
+
+		var spawn_position: Vector2 = _enemy_start_positions.get(level_enemy, level_enemy.global_position)
+		if level_enemy.has_method("reset_to_level_start"):
+			level_enemy.call("reset_to_level_start", spawn_position)
 		else:
-			enemy.global_position = _enemy_start_position
-			enemy.velocity = Vector2.ZERO
+			level_enemy.global_position = spawn_position
+			level_enemy.velocity = Vector2.ZERO
 
 	if key is Node2D:
 		if key.has_method("reset_to_level_start"):
@@ -899,11 +907,59 @@ func _reset_on_fall() -> bool:
 		)
 
 	_key_reveal_time_remaining = 0.0
+	_key_has_been_revealed = false
+	_update_key_reveal_state()
 
 	if _is_tutorial_level():
 		_restart_tutorial()
 
 	return true
+
+
+func _cache_level_enemies() -> void:
+	_level_enemies.clear()
+	_enemy_start_positions.clear()
+
+	for child in get_children():
+		if not (child is CharacterBody2D):
+			continue
+		if not child.is_in_group("enemy"):
+			continue
+
+		var level_enemy := child as CharacterBody2D
+		_level_enemies.append(level_enemy)
+		_enemy_start_positions[level_enemy] = level_enemy.global_position
+
+		if level_enemy == enemy:
+			_enemy_start_position = level_enemy.global_position
+
+		if level_enemy.has_signal("defeated") and not level_enemy.defeated.is_connected(_on_enemy_defeated):
+			level_enemy.defeated.connect(_on_enemy_defeated)
+
+
+func _all_level_enemies_defeated() -> bool:
+	if _level_enemies.is_empty():
+		return true
+
+	for level_enemy in _level_enemies:
+		if level_enemy == null or not is_instance_valid(level_enemy):
+			continue
+		if level_enemy.get("is_dead") != true:
+			return false
+
+	return true
+
+
+func _update_key_reveal_state() -> void:
+	var should_reveal_key := _all_level_enemies_defeated()
+
+	if key and key.has_method("set_available"):
+		key.call("set_available", should_reveal_key)
+
+	if should_reveal_key and not _key_has_been_revealed and reveal_key_on_spawn and key is Node2D:
+		_key_reveal_time_remaining = key_reveal_duration
+
+	_key_has_been_revealed = should_reveal_key
 
 
 func _get_level_bounds() -> Rect2:

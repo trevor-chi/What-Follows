@@ -224,7 +224,7 @@ animations = [{
 size = Vector2(106, 96)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ksmwx"]
-radius = 299.0
+radius = 250.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_55jtl"]
 size = Vector2(135, 78)
@@ -239,7 +239,7 @@ texture_filter = 1
 position = Vector2(0, -24)
 scale = Vector2(3.6, 3.6)
 sprite_frames = SubResource("SpriteFrames_2qkhh")
-animation = &"Death"
+animation = &"Idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2051862880]
 position = Vector2(-4, 45)

@@ -47,6 +47,7 @@ const TITLE_SHADOW_DELAY_TICKS := 72.0
 @onready var mid_background: Sprite2D = $MidBackground
 @onready var near_background: Sprite2D = $NearBackground
 @onready var shadow_glow: AnimatedSprite2D = $Stage/ShadowGlow
+@onready var shadow_outline: AnimatedSprite2D = $Stage/ShadowOutline
 @onready var shadow_sprite: AnimatedSprite2D = $Stage/ShadowSprite
 @onready var hero_sprite: AnimatedSprite2D = $Stage/HeroSprite
 
@@ -83,6 +84,7 @@ func _ready() -> void:
 	_set_active_tab(TitleTab.OVERVIEW)
 	_apply_responsive_layout()
 	_play_shadow_animation(TITLE_IDLE_ANIMATION)
+	_sync_title_shadow_outline()
 	_start_idle_phase(TITLE_IDLE_DURATION)
 
 
@@ -94,6 +96,7 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	_stage_clock += delta
 	_flush_shadow_animation_queue()
+	_sync_title_shadow_outline()
 
 	if _stage_phase == StagePhase.IDLE and _stage_clock >= _phase_deadline:
 		_start_run_phase()
@@ -196,8 +199,10 @@ func _play_hero_animation(animation_name: StringName) -> void:
 
 
 func _play_shadow_animation(animation_name: StringName) -> void:
+	shadow_outline.play(animation_name)
 	shadow_sprite.play(animation_name)
 	shadow_glow.play(animation_name)
+	_sync_title_shadow_outline()
 
 
 func _schedule_shadow_animation(animation_name: StringName) -> void:
@@ -290,6 +295,11 @@ func _apply_stage_layout(viewport_size: Vector2, is_compact: bool) -> void:
 	shadow_sprite.scale = Vector2(base_scale, base_scale)
 	shadow_sprite.flip_h = _sprites_swapped
 
+	shadow_outline.position = shadow_sprite.position
+	shadow_outline.scale = shadow_sprite.scale
+	shadow_outline.flip_h = shadow_sprite.flip_h
+	_sync_title_shadow_outline()
+
 	shadow_glow.position = shadow_sprite.position + Vector2(12.0, 10.0)
 	shadow_glow.scale = Vector2(base_scale * 1.02, base_scale * 1.02)
 	shadow_glow.flip_h = shadow_sprite.flip_h
@@ -297,6 +307,25 @@ func _apply_stage_layout(viewport_size: Vector2, is_compact: bool) -> void:
 	hero_sprite.position = Vector2(hero_x, stage_y)
 	hero_sprite.scale = Vector2(base_scale, base_scale)
 	hero_sprite.flip_h = not _sprites_swapped
+
+
+func _sync_title_shadow_outline() -> void:
+	if shadow_outline == null or shadow_sprite == null:
+		return
+
+	if shadow_outline.animation != shadow_sprite.animation:
+		shadow_outline.play(shadow_sprite.animation)
+	elif not shadow_outline.is_playing() and shadow_sprite.is_playing():
+		shadow_outline.play()
+
+	shadow_outline.position = shadow_sprite.position
+	shadow_outline.scale = shadow_sprite.scale
+	shadow_outline.flip_h = shadow_sprite.flip_h
+	shadow_outline.frame = shadow_sprite.frame
+	shadow_outline.frame_progress = shadow_sprite.frame_progress
+
+	if not shadow_sprite.is_playing():
+		shadow_outline.pause()
 
 
 func _maybe_swap_stage_sides() -> void:

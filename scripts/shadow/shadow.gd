@@ -21,6 +21,7 @@ const SHADOW_GROUNDED_SPRITE_Y := -24.0
 
 # --- Node Reference ---
 @onready var shadow_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var outline_sprite: AnimatedSprite2D = $OutlineSprite
 
 # --- Internal State ---
 var state_queue: Array = []
@@ -38,6 +39,7 @@ func _ready() -> void:
 	collision_mask = SHADOW_FALL_MASK
 
 	reset_queue()
+	_sync_outline_sprite()
 
 
 func _physics_process(delta: float) -> void:
@@ -60,6 +62,7 @@ func _physics_process(delta: float) -> void:
 			current_animation = "Idle"
 		shadow_sprite.flip_h = facing_left
 		shadow_sprite.position.y = SHADOW_GROUNDED_SPRITE_Y if is_on_floor() else SHADOW_AIR_SPRITE_Y
+		_sync_outline_sprite()
 		return
 
 	_record_target_state(delta)
@@ -156,6 +159,7 @@ func _update_animation(delayed: Dictionary) -> void:
 
 	shadow_sprite.flip_h = facing_left
 	shadow_sprite.position.y = SHADOW_GROUNDED_SPRITE_Y if is_on_floor() else SHADOW_AIR_SPRITE_Y
+	_sync_outline_sprite()
 
 
 func _update_collision_mask() -> void:
@@ -245,6 +249,7 @@ func set_follow_enabled(enabled: bool) -> void:
 	follow_enabled = enabled
 	if enabled:
 		reset_queue()
+		_sync_outline_sprite()
 		return
 
 	velocity.x = 0.0
@@ -253,6 +258,26 @@ func set_follow_enabled(enabled: bool) -> void:
 	if is_on_floor():
 		shadow_sprite.play("Idle")
 		current_animation = "Idle"
+	_sync_outline_sprite()
+
+
+func _sync_outline_sprite() -> void:
+	if outline_sprite == null or shadow_sprite == null:
+		return
+
+	if outline_sprite.animation != shadow_sprite.animation:
+		outline_sprite.play(shadow_sprite.animation)
+	elif not outline_sprite.is_playing() and shadow_sprite.is_playing():
+		outline_sprite.play()
+
+	outline_sprite.flip_h = shadow_sprite.flip_h
+	outline_sprite.position = shadow_sprite.position
+	outline_sprite.scale = shadow_sprite.scale
+	outline_sprite.frame = shadow_sprite.frame
+	outline_sprite.frame_progress = shadow_sprite.frame_progress
+
+	if not shadow_sprite.is_playing():
+		outline_sprite.pause()
 
 
 func _clamp_horizontal_bounds() -> void:
@@ -302,6 +327,8 @@ func spawn_afterimage() -> void:
 		sprite.animation = shadow_sprite.animation
 		sprite.frame = shadow_sprite.frame
 		sprite.flip_h = shadow_sprite.flip_h
+		sprite.position = shadow_sprite.position
+		sprite.scale = shadow_sprite.scale
 		sprite.modulate = Color(0, 0, 0, afterimage_start_alpha)
 
 		var tween := create_tween()

@@ -301,7 +301,7 @@ door_platform_drop_rows = 0
 [node name="Door" parent="." unique_id=1770347977 instance=ExtResource("8_m5dbj")]
 z_index = 10
 position = Vector2(2737, 420)
-next_level_scene_path = "res://scenes/NextLevel.tscn"
+next_level_scene_path = "res://scenes/levelTwo.tscn"
 
 [node name="TileMapPlayer" type="TileMap" parent="." unique_id=950363599]
 texture_filter = 1
