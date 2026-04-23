@@ -15,7 +15,17 @@ func _ready() -> void:
 
 func _on_retry_button_pressed() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file(restart_scene_path)
+
+	var retry_scene_path := restart_scene_path
+	var scene_transition := get_node_or_null("/root/SceneTransition")
+	if scene_transition != null and scene_transition.has_method("get_retry_scene_path"):
+		var saved_retry_scene_path = scene_transition.call("get_retry_scene_path") as String
+		if not saved_retry_scene_path.is_empty():
+			retry_scene_path = saved_retry_scene_path
+		if scene_transition.has_method("clear_retry_scene_path"):
+			scene_transition.call("clear_retry_scene_path")
+
+	get_tree().change_scene_to_file(retry_scene_path)
 
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()

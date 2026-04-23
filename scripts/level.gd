@@ -179,6 +179,13 @@ func _on_enemy_defeated() -> void:
 	_update_key_reveal_state()
 
 func _on_player_died() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene != null:
+		var retry_scene_path := current_scene.scene_file_path
+		if not retry_scene_path.is_empty():
+			var scene_transition := get_node_or_null("/root/SceneTransition")
+			if scene_transition != null and scene_transition.has_method("set_retry_scene_path"):
+				scene_transition.call("set_retry_scene_path", retry_scene_path)
 	await get_tree().create_timer(1.0).timeout
 	get_tree().change_scene_to_file("res://scenes/GameOver.tscn")
 

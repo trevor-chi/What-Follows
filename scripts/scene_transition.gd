@@ -9,6 +9,7 @@ var _card: PanelContainer
 var _title_label: Label
 var _subtitle_label: Label
 var _is_transitioning := false
+var _retry_scene_path := ""
 
 
 func _ready() -> void:
@@ -56,6 +57,18 @@ func change_scene_with_transition(
 
 func is_transitioning() -> bool:
 	return _is_transitioning
+
+
+func set_retry_scene_path(scene_path: String) -> void:
+	_retry_scene_path = scene_path
+
+
+func get_retry_scene_path() -> String:
+	return _retry_scene_path
+
+
+func clear_retry_scene_path() -> void:
+	_retry_scene_path = ""
 
 
 func _build_overlay() -> void:
