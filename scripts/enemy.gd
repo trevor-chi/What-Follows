@@ -3,6 +3,12 @@ extends CharacterBody2D
 
 signal defeated
 
+const ENEMY_HIT_STREAM := preload("res://assets/Sounds/EnemyHit.mp3")
+const ENEMY_ATTACK_STREAM := preload("res://assets/Sounds/EnemyAttack.mp3")
+const ENEMY_DEATH_STREAM := preload("res://assets/Sounds/MonsterDeath.mp3")
+const ENEMY_ATTACK_SOUND_DURATION := 0.6
+const ENEMY_ATTACK_FADE_DURATION := 0.08
+
 @export var speed: float = 300.0
 @export var gravity: float = 1100.0
 @export var stop_distance: float = 34.0
@@ -11,6 +17,9 @@ signal defeated
 @export var attack_cooldown: float = 1.0
 @export var attack_area_x_offset: float = 30.0
 @export var max_health: int = 3
+@export_range(-40.0, 6.0, 0.5) var hit_sound_volume_db := -6.0
+@export_range(-40.0, 6.0, 0.5) var attack_sound_volume_db := -7.0
+@export_range(-40.0, 6.0, 0.5) var death_sound_volume_db := -5.0
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 @onready var detection_area: Area2D = $DetectionRange
@@ -29,11 +38,16 @@ var defeat_emitted := false
 var _starting_collision_layer := 0
 var ai_enabled := true
 var damage_enabled := true
+var _hit_sound_player: AudioStreamPlayer
+var _attack_sound_player: AudioStreamPlayer
+var _death_sound_player: AudioStreamPlayer
+var _attack_sound_tween: Tween
 
 func _ready() -> void:
 	health = max_health
 	_starting_collision_layer = collision_layer
 	anim.play("Idle")
+	_setup_audio()
 
 	detection_area.monitoring = true
 	attack_area.monitoring = false
@@ -188,6 +202,7 @@ func _start_attack() -> void:
 	velocity.x = 0.0
 	_update_attack_side()
 	attack_area.monitoring = true
+	_play_attack_sound()
 	anim.play("Attack")
 
 func _apply_attack_hit_to_overlaps() -> void:
@@ -198,10 +213,11 @@ func _apply_attack_hit_to_overlaps() -> void:
 			body.take_damage(attack_damage)
 			break
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, _attack_variant: int = 1) -> void:
 	if is_dead or amount <= 0 or not damage_enabled:
 		return
 
+	_play_hit_sound()
 	health = clampi(health - amount, 0, max_health)
 	if health <= 0:
 		die()
@@ -224,6 +240,8 @@ func die() -> void:
 	attack_area.monitoring = false
 	collision_layer = 0
 
+	_stop_attack_sound()
+	_play_death_sound()
 	anim.play("Death")
 
 func _on_animation_finished() -> void:
@@ -271,3 +289,63 @@ func reset_to_level_start(spawn_position: Vector2) -> void:
 	facing_dir = 1
 	_update_attack_side()
 	anim.play("Idle")
+
+
+func _setup_audio() -> void:
+	_hit_sound_player = AudioStreamPlayer.new()
+	_hit_sound_player.name = "HitSoundPlayer"
+	_hit_sound_player.stream = ENEMY_HIT_STREAM
+	_hit_sound_player.volume_db = hit_sound_volume_db
+	add_child(_hit_sound_player)
+
+	_attack_sound_player = AudioStreamPlayer.new()
+	_attack_sound_player.name = "AttackSoundPlayer"
+	_attack_sound_player.stream = ENEMY_ATTACK_STREAM
+	_attack_sound_player.volume_db = attack_sound_volume_db
+	add_child(_attack_sound_player)
+
+	_death_sound_player = AudioStreamPlayer.new()
+	_death_sound_player.name = "DeathSoundPlayer"
+	_death_sound_player.stream = ENEMY_DEATH_STREAM
+	_death_sound_player.volume_db = death_sound_volume_db
+	add_child(_death_sound_player)
+
+
+func _play_hit_sound() -> void:
+	if _hit_sound_player == null:
+		return
+
+	_hit_sound_player.play()
+
+
+func _play_attack_sound() -> void:
+	if _attack_sound_player == null:
+		return
+
+	if _attack_sound_tween != null and _attack_sound_tween.is_running():
+		_attack_sound_tween.kill()
+
+	_attack_sound_player.stop()
+	_attack_sound_player.volume_db = attack_sound_volume_db
+	_attack_sound_player.play()
+
+	_attack_sound_tween = create_tween()
+	_attack_sound_tween.tween_interval(maxf(ENEMY_ATTACK_SOUND_DURATION - ENEMY_ATTACK_FADE_DURATION, 0.0))
+	_attack_sound_tween.tween_property(_attack_sound_player, "volume_db", -40.0, ENEMY_ATTACK_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_attack_sound_tween.tween_callback(_stop_attack_sound)
+
+
+func _stop_attack_sound() -> void:
+	if _attack_sound_player == null:
+		return
+
+	_attack_sound_player.stop()
+	_attack_sound_player.volume_db = attack_sound_volume_db
+	_attack_sound_tween = null
+
+
+func _play_death_sound() -> void:
+	if _death_sound_player == null:
+		return
+
+	_death_sound_player.play()

@@ -3,6 +3,13 @@ extends CharacterBody2D
 signal health_changed(current: int, max_value: int)
 signal died
 
+const FOOTSTEP_STREAMS := [
+	preload("res://assets/Sounds/WalkOnDirtOne.mp3"),
+	preload("res://assets/Sounds/WalkOnDirtTwo.mp3"),
+]
+const JUMP_GRUNT_STREAM := preload("res://assets/Sounds/Grunt.mp3")
+const PLAYER_DEATH_STREAM := preload("res://assets/Sounds/MaleDeath.mp3")
+
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 @onready var health_bar: ProgressBar = $HealthBarPivot/HealthBar
 @onready var attack_area: Area2D = $AttackArea
@@ -26,6 +33,10 @@ var damage_enabled := true
 @export var accel := 2800.0
 @export var decel := 4200.0
 @export var attack_move_multiplier := 0.2 # % of move speed while attacking
+@export_range(0.1, 1.0, 0.01) var footstep_interval := 0.32
+@export_range(-40.0, 6.0, 0.5) var footstep_volume_db := -12.0
+@export_range(-40.0, 6.0, 0.5) var jump_grunt_volume_db := -10.0
+@export_range(-40.0, 6.0, 0.5) var death_sound_volume_db := -6.0
 
 # Attack damage/hitbox settings
 @export var attack_damage: int = 1
@@ -43,6 +54,12 @@ var is_attacking := false
 var attack_step := 0 # 0 = none, 1..3 = combo hit
 var queued_next_attack := false
 var hit_targets_this_swing: Dictionary = {}
+var _footstep_timer := 0.0
+var _next_footstep_stream_index := 0
+var _next_footstep_player_index := 0
+var _footstep_players: Array[AudioStreamPlayer] = []
+var _jump_grunt_player: AudioStreamPlayer
+var _death_sound_player: AudioStreamPlayer
 
 # Key inventory
 var keys: Array[String] = []
@@ -79,6 +96,8 @@ func _ready() -> void:
 	attack_area.monitoring = false
 	if not attack_area.body_entered.is_connected(_on_attack_area_body_entered):
 		attack_area.body_entered.connect(_on_attack_area_body_entered)
+
+	_setup_audio_players()
 	_update_attack_area_side()
 
 func _update_health_bar() -> void:
@@ -160,6 +179,7 @@ func _on_died() -> void:
 	attack_area.monitoring = false
 	velocity = Vector2.ZERO
 
+	_play_death_sound()
 	died.emit()
 	anim.play("Death")
 
@@ -174,6 +194,7 @@ func start_attack(step: int) -> void:
 
 	_update_attack_area_side()
 	attack_area.monitoring = true
+	_play_jump_grunt()
 	anim.play("Attack_%d" % attack_step)
 
 func end_attack(direction: float, on_floor: bool) -> void:
@@ -216,7 +237,7 @@ func _apply_attack_hit_to_overlaps() -> void:
 			continue
 
 		hit_targets_this_swing[body] = true
-		body.take_damage(attack_damage)
+		body.take_damage(attack_damage, attack_step)
 
 func _finish_hurt_state() -> void:
 	if not is_hurt or is_dead:
@@ -239,6 +260,7 @@ func _physics_process(delta: float) -> void:
 		hurt_timer -= delta
 
 	if is_dead:
+		_stop_footsteps()
 		move_input_dir = 0.0
 		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
 		if not is_on_floor():
@@ -247,6 +269,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if is_hurt:
+		_stop_footsteps()
 		move_input_dir = 0.0
 		hurt_anim_timer -= delta
 
@@ -265,6 +288,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if not controls_enabled:
+		_stop_footsteps()
 		move_input_dir = 0.0
 		did_jump_this_frame = false
 
@@ -293,6 +317,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and Input.is_action_just_pressed("jump"):
 		velocity.y = -jumpVel
 		did_jump_this_frame = true
+		_play_jump_grunt()
 		cancel_attack_for_air()
 
 	if Input.is_action_just_pressed("attack") and is_on_floor():
@@ -320,6 +345,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	var on_floor := is_on_floor()
+	if not was_on_floor and on_floor:
+		_play_landing_footstep()
 
 	if is_attacking and not anim.is_playing():
 		if queued_next_attack and attack_step < 3 and on_floor:
@@ -338,6 +365,8 @@ func _physics_process(delta: float) -> void:
 			play_anim("Running")
 		else:
 			play_anim("Idle")
+
+	_update_footsteps(delta, input_dir, on_floor)
 
 	anim.flip_h = facing_dir < 0
 	was_on_floor = on_floor
@@ -370,6 +399,76 @@ func _on_animated_sprite_2d_animation_finished() -> void:
 func _on_attack_area_body_entered(_body: Node) -> void:
 	# No immediate damage; damage is applied when attack animation finishes.
 	pass
+
+
+func _setup_audio_players() -> void:
+	for index in range(2):
+		var footstep_player := AudioStreamPlayer.new()
+		footstep_player.name = "FootstepPlayer%d" % index
+		footstep_player.volume_db = footstep_volume_db
+		add_child(footstep_player)
+		_footstep_players.append(footstep_player)
+
+	_jump_grunt_player = AudioStreamPlayer.new()
+	_jump_grunt_player.name = "JumpGruntPlayer"
+	_jump_grunt_player.volume_db = jump_grunt_volume_db
+	add_child(_jump_grunt_player)
+
+	_death_sound_player = AudioStreamPlayer.new()
+	_death_sound_player.name = "DeathSoundPlayer"
+	_death_sound_player.stream = PLAYER_DEATH_STREAM
+	_death_sound_player.volume_db = death_sound_volume_db
+	add_child(_death_sound_player)
+
+
+func _update_footsteps(delta: float, input_dir: float, on_floor: bool) -> void:
+	var is_grounded_and_moving: bool = on_floor and abs(input_dir) > 0.2 and abs(velocity.x) > 20.0 and not is_attacking
+	if not is_grounded_and_moving:
+		_stop_footsteps()
+		return
+
+	_footstep_timer -= delta
+	if _footstep_timer > 0.0:
+		return
+
+	_play_next_footstep()
+	_footstep_timer = footstep_interval
+
+
+func _play_next_footstep() -> void:
+	if _footstep_players.is_empty() or FOOTSTEP_STREAMS.is_empty():
+		return
+
+	var footstep_player := _footstep_players[_next_footstep_player_index]
+	_next_footstep_player_index = (_next_footstep_player_index + 1) % _footstep_players.size()
+
+	footstep_player.stream = FOOTSTEP_STREAMS[_next_footstep_stream_index]
+	_next_footstep_stream_index = (_next_footstep_stream_index + 1) % FOOTSTEP_STREAMS.size()
+	footstep_player.play()
+
+
+func _play_landing_footstep() -> void:
+	_play_next_footstep()
+	_footstep_timer = footstep_interval
+
+
+func _play_jump_grunt() -> void:
+	if _jump_grunt_player == null:
+		return
+
+	_jump_grunt_player.stream = JUMP_GRUNT_STREAM
+	_jump_grunt_player.play()
+
+
+func _play_death_sound() -> void:
+	if _death_sound_player == null:
+		return
+
+	_death_sound_player.play()
+
+
+func _stop_footsteps() -> void:
+	_footstep_timer = 0.0
 
 func die() -> void:
 	if is_dead:

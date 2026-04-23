@@ -1,6 +1,8 @@
 # Key.gd
 extends Area2D
 
+const KEY_COLLECT_STREAM := preload("res://assets/Sounds/KeyCollect.mp3")
+
 @export var key_id: String = "gold_key"
 @export var follow_offset: Vector2 = Vector2(18, -20)
 @export var follow_lerp_speed: float = 3.0
@@ -11,6 +13,7 @@ extends Area2D
 @export var reveal_scale_multiplier: float = 1.45
 @export var idle_pulse_amount: float = 0.08
 @export var idle_glow_amount: float = 0.2
+@export_range(-40.0, 6.0, 0.5) var key_collect_volume_db := -8.0
 
 @onready var sprite: AnimatedSprite2D = $Key
 @onready var shape: CollisionShape2D = $CollisionShape2D
@@ -24,11 +27,13 @@ var bobbing_enabled := false
 var reveal_tween: Tween = null
 var landing_tween: Tween = null
 var base_sprite_scale := Vector2.ONE
+var _key_collect_player: AudioStreamPlayer2D
 
 func _ready() -> void:
 	resting_position = global_position
 	base_sprite_scale = sprite.scale
 	body_entered.connect(_on_body_entered)
+	_setup_audio()
 	set_available(false)
 
 func _process(delta: float) -> void:
@@ -90,6 +95,7 @@ func _on_body_entered(body: Node) -> void:
 		collected = true
 		monitoring = false
 		shape.set_deferred("disabled", true)
+		_play_key_collect_sound()
 		body.add_key(key_id, self)
 
 func use_on_door(target_pos: Vector2) -> void:
@@ -147,3 +153,18 @@ func reset_to_level_start(spawn_position: Vector2, available: bool = false) -> v
 	sprite.scale = base_sprite_scale
 	sprite.modulate = Color.WHITE
 	set_available(available)
+
+
+func _setup_audio() -> void:
+	_key_collect_player = AudioStreamPlayer2D.new()
+	_key_collect_player.name = "KeyCollectPlayer"
+	_key_collect_player.stream = KEY_COLLECT_STREAM
+	_key_collect_player.volume_db = key_collect_volume_db
+	add_child(_key_collect_player)
+
+
+func _play_key_collect_sound() -> void:
+	if _key_collect_player == null:
+		return
+
+	_key_collect_player.play()

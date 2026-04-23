@@ -44,6 +44,8 @@ var _beat_tween: Tween
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = false
+	if has_node("/root/MusicManager"):
+		MusicManager.ensure_playing()
 
 	if not replay_button.pressed.is_connected(_on_replay_button_pressed):
 		replay_button.pressed.connect(_on_replay_button_pressed)
@@ -150,6 +152,8 @@ func _change_scene(scene_path: String, title: String, subtitle: String) -> void:
 		return
 
 	_transitioning = true
+	if has_node("/root/MusicManager") and scene_path != title_scene_path:
+		MusicManager.fade_out_and_stop(0.9)
 	var scene_transition := get_node_or_null("/root/SceneTransition")
 	if scene_transition != null and scene_transition.has_method("change_scene_with_transition"):
 		await scene_transition.change_scene_with_transition(scene_path, title, subtitle)

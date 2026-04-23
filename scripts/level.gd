@@ -1,6 +1,8 @@
 # MainScene.gd
 extends Node2D
 
+const SWAP_SOUND_STREAM := preload("res://assets/Sounds/SwapSound.mp3")
+
 const PLAYER_WALL_LAYER := 8
 const SHADOW_WALL_LAYER := 16
 const DOOR_PLATFORM_TILES := [
@@ -57,6 +59,7 @@ enum TutorialStep {
 @export var key_platform_drop_rows := 0
 @export var fall_reset_margin := 256.0
 @export var tutorial_prompt_display_time := 3.5
+@export_range(-40.0, 6.0, 0.5) var swap_sound_volume_db := -6.0
 
 @onready var _tutorial_prompt_panel := get_node_or_null("TutorialUI/TutorialPrompt") as Control
 @onready var _tutorial_title_label := get_node_or_null("TutorialUI/TutorialPrompt/PromptMargin/PromptStack/TutorialTitle") as Label
@@ -91,10 +94,13 @@ var _tutorial_move_step_ready_time_ms := -1
 var _tutorial_swap_checkpoint := 0
 var _tutorial_prompt_time_remaining := 0.0
 var _tutorial_prompt_active := false
+var _swap_sound_player: AudioStreamPlayer
 
 func _ready() -> void:
 	if player and not player.died.is_connected(_on_player_died):
 		player.died.connect(_on_player_died)
+
+	_setup_audio()
 
 	_cache_level_enemies()
 
@@ -173,8 +179,25 @@ func swap_positions():
 	if shadow.has_method("reset_queue"):
 		shadow.reset_queue()
 
+	_play_swap_sound()
+
 	if _tutorial_active:
 		_tutorial_swap_count += 1
+
+
+func _setup_audio() -> void:
+	_swap_sound_player = AudioStreamPlayer.new()
+	_swap_sound_player.name = "SwapSoundPlayer"
+	_swap_sound_player.stream = SWAP_SOUND_STREAM
+	_swap_sound_player.volume_db = swap_sound_volume_db
+	add_child(_swap_sound_player)
+
+
+func _play_swap_sound() -> void:
+	if _swap_sound_player == null:
+		return
+
+	_swap_sound_player.play()
 
 func _on_enemy_defeated() -> void:
 	_update_key_reveal_state()

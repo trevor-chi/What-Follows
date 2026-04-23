@@ -66,6 +66,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = false
 	_rng.randomize()
+	if has_node("/root/MusicManager"):
+		MusicManager.ensure_playing()
 
 	if not start_button.pressed.is_connected(_on_start_button_pressed):
 		start_button.pressed.connect(_on_start_button_pressed)
@@ -155,6 +157,20 @@ func _start_game() -> void:
 		return
 
 	_transitioning = true
+	if has_node("/root/MusicManager"):
+		MusicManager.fade_out_and_stop(0.9)
+
+	var scene_transition := get_node_or_null("/root/SceneTransition")
+	if scene_transition != null and scene_transition.has_method("change_scene_with_transition"):
+		await scene_transition.change_scene_with_transition(
+			game_scene_path,
+			"Beginning",
+			"Stepping into what follows..."
+		)
+		if is_inside_tree():
+			_transitioning = false
+		return
+
 	var error := get_tree().change_scene_to_file(game_scene_path)
 	if error != OK:
 		push_error("Could not load game scene: %s" % game_scene_path)
