@@ -47,6 +47,7 @@ enum TutorialStep {
 @export_range(0.0, 1.0) var camera_shadow_weight := 0.5
 @export var camera_position_smoothing := 5.0
 @export var camera_zoom_smoothing := 4.0
+@export var camera_vertical_offset := -144.0
 @export var reveal_key_on_spawn := false
 @export var key_reveal_duration := 1.35
 @export var level_wall_thickness := 128.0
@@ -583,7 +584,7 @@ func _configure_level_camera() -> void:
 	camera.limit_enabled = false
 	camera.zoom = Vector2.ONE * camera_max_zoom
 	camera.global_position = _clamp_camera_position_to_bounds(
-		player.global_position,
+		_apply_camera_focus_offset(player.global_position),
 		get_viewport_rect().size,
 		camera.zoom
 	)
@@ -599,7 +600,7 @@ func _update_level_camera(delta: float) -> void:
 	if shadow:
 		shadow_pos = shadow.global_position
 
-	var target_position := player_pos.lerp(shadow_pos, camera_shadow_weight)
+	var target_position := _apply_camera_focus_offset(player_pos.lerp(shadow_pos, camera_shadow_weight))
 	var viewport_size := get_viewport_rect().size
 	var target_zoom := camera_max_zoom
 
@@ -612,7 +613,7 @@ func _update_level_camera(delta: float) -> void:
 
 		if _key_reveal_time_remaining > 0.0 and key is Node2D:
 			var key_pos := (key as Node2D).global_position
-			target_position = player_pos.lerp(key_pos, 0.5)
+			target_position = _apply_camera_focus_offset(player_pos.lerp(key_pos, 0.5))
 			var reveal_span := (player_pos - key_pos).abs() + (camera_padding * 2.0)
 			var reveal_zoom_x := viewport_size.x / maxf(reveal_span.x, 1.0)
 			var reveal_zoom_y := viewport_size.y / maxf(reveal_span.y, 1.0)
@@ -633,6 +634,10 @@ func _get_camera() -> Camera2D:
 		return null
 
 	return player.get_node_or_null("Camera2D") as Camera2D
+
+
+func _apply_camera_focus_offset(position: Vector2) -> Vector2:
+	return position + Vector2(0.0, camera_vertical_offset)
 
 
 func _get_camera_bounds() -> Rect2:
@@ -908,7 +913,7 @@ func _reset_on_fall() -> bool:
 	var camera := _get_camera()
 	if camera:
 		camera.global_position = _clamp_camera_position_to_bounds(
-			player.global_position,
+			_apply_camera_focus_offset(player.global_position),
 			get_viewport_rect().size,
 			camera.zoom
 		)

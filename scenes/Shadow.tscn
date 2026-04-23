@@ -3,10 +3,12 @@
 [ext_resource type="Script" uid="uid://du7bb2ry5xctb" path="res://scripts/shadow/shadow.gd" id="1_wxgxi"]
 [ext_resource type="SpriteFrames" uid="uid://l3uikmrmm4jn" path="res://animationFrames/player_sprite_frames.tres" id="2_lr3y3"]
 [ext_resource type="PackedScene" uid="uid://bilc7lergnct" path="res://scenes/afterImageScene.tscn" id="2_noxlr"]
-[ext_resource type="Shader" path="res://shaders/sprite_outline_only.gdshader" id="4_ltlvj"]
+[ext_resource type="Shader" uid="uid://xk57t5r17nsv" path="res://shaders/sprite_outline_only.gdshader" id="4_ltlvj"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_noxlr"]
 shader = ExtResource("4_ltlvj")
+shader_parameter/outline_color = Color(0.88, 0.93, 1, 0.22)
+shader_parameter/outline_size = 1.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lr3y3"]
 size = Vector2(30, 93.6)
@@ -28,7 +30,6 @@ animation = &"Attack_1"
 autoplay = "Idle"
 
 [node name="OutlineSprite" type="AnimatedSprite2D" parent="." unique_id=1822331101]
-modulate = Color(1, 1, 1, 1)
 z_index = -1
 texture_filter = 1
 material = SubResource("ShaderMaterial_noxlr")

@@ -367,7 +367,7 @@ position = Vector2(1401, 338)
 target = NodePath("../Player")
 
 [node name="Enemy" parent="." unique_id=530289679 instance=ExtResource("9_4whi7")]
-position = Vector2(2040.7144, -598.79736)
+position = Vector2(2125.7144, -596.8168)
 
 [node name="Key" parent="." unique_id=717407269 instance=ExtResource("11_kaqhf")]
 position = Vector2(-364.28574, -468.73883)
@@ -383,13 +383,13 @@ collision_mask = 4
 [node name="Door" parent="." unique_id=1770347977 instance=ExtResource("15_5fej7")]
 z_index = 10
 texture_filter = 2
-position = Vector2(2655, -401)
+position = Vector2(2655, -419)
 script = ExtResource("16_w405r")
 next_level_scene_path = "res://scenes/NextLevel.tscn"
 
 [node name="DoorBlackness" parent="." unique_id=2034293126 instance=ExtResource("17_8bl1d")]
 z_index = 9
-position = Vector2(2657.8572, -433.34958)
+position = Vector2(2657.8572, -451.34958)
 sprite_frames = SubResource("SpriteFrames_wgg1m")
 frame_progress = 0.0
 

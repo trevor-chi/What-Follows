@@ -349,7 +349,7 @@ collision_layer = 4096
 collision_mask = 4
 
 [node name="Key" parent="." unique_id=717407269 instance=ExtResource("6_rb3yt")]
-position = Vector2(2279, -673)
+position = Vector2(2265.7144, -683.3024)
 collision_layer = 512
 collision_mask = 4
 

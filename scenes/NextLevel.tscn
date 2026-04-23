@@ -1,4 +1,73 @@
-[gd_scene format=3]
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/next_level.gd" id="1_hv05u"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_0.png" id="2_oh1up"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_1.png" id="3_mc4qf"]
+[ext_resource type="Texture2D" path="res://assets/tileMapAssets/background_2.png" id="4_xm0kg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.027451, 0.0470588, 0.0823529, 0.84)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.635294, 0.768627, 0.980392, 0.95)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
+bg_color = Color(0.0862745, 0.117647, 0.184314, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.447059, 0.556863, 0.705882, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+bg_color = Color(0.858824, 0.654902, 0.301961, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.956863, 0.823529, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_pressed"]
+bg_color = Color(0.509804, 0.376471, 0.14902, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.996078, 0.901961, 0.690196, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_focus"]
+bg_color = Color(0.0862745, 0.117647, 0.184314, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.447059, 0.556863, 0.705882, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="NextLevel" type="Control"]
 layout_mode = 3
@@ -7,27 +76,182 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_hv05u")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 1)
+color = Color(0.00784314, 0.0156863, 0.0313726, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="FarBackground" type="Sprite2D" parent="."]
+texture_filter = 1
+centered = false
+texture = ExtResource("2_oh1up")
+
+[node name="MidBackground" type="Sprite2D" parent="."]
+modulate = Color(0.76, 0.82, 0.94, 0.84)
+texture_filter = 1
+centered = false
+texture = ExtResource("3_mc4qf")
+
+[node name="NearBackground" type="Sprite2D" parent="."]
+modulate = Color(0.92, 0.96, 1, 0.92)
+texture_filter = 1
+centered = false
+texture = ExtResource("4_xm0kg")
+
+[node name="AtmosphereOverlay" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0156863, 0.027451, 0.054902, 0.42)
 
-[node name="Label" type="Label" parent="CenterContainer"]
+[node name="TopVeil" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 220.0
+grow_horizontal = 2
+mouse_filter = 2
+color = Color(0.129412, 0.0862745, 0.0313726, 0.16)
+
+[node name="BottomGlow" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -180.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.968627, 0.713726, 0.313726, 0.12)
+
+[node name="ContentMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 30
+
+[node name="CenterContainer" type="CenterContainer" parent="ContentMargin"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 52
-text = "Next Level"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PanelContainer" type="PanelContainer" parent="ContentMargin/CenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="PanelMargin" type="MarginContainer" parent="ContentMargin/CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 42
+theme_override_constants/margin_top = 34
+theme_override_constants/margin_right = 42
+theme_override_constants/margin_bottom = 30
+
+[node name="ContentColumn" type="VBoxContainer" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin"]
+layout_mode = 2
+custom_minimum_size = Vector2(760, 0)
+theme_override_constants/separation = 18
+
+[node name="Overline" type="Label" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94902, 0.772549, 0.427451, 0.95)
+theme_override_font_sizes/font_size = 28
+text = "END OF GAME"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.964706, 0.980392, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.72)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 92
+text = "What Follows"
+horizontal_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+custom_minimum_size = Vector2(220, 4)
+layout_mode = 2
+size_flags_horizontal = 4
+color = Color(0.529412, 0.74902, 0.972549, 0.85)
+
+[node name="Body" type="Label" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.862745, 0.909804, 0.984314, 0.96)
+theme_override_font_sizes/font_size = 46
+text = "The path ahead is quiet for the first time."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Prompt" type="Label" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.780392, 0.839216, 0.937255, 0.72)
+theme_override_font_sizes/font_size = 28
+text = "Press Space to continue"
+horizontal_alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="ReplayButton" type="Button" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(210, 68)
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_normal")
+text = "Play Again"
+
+[node name="TitleButton" type="Button" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(210, 68)
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+text = "Title Screen"
+
+[node name="QuitButton" type="Button" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 68)
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+text = "Quit"
+
+[node name="Footer" type="Label" parent="ContentMargin/CenterContainer/PanelContainer/PanelMargin/ContentColumn"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.643137, 0.721569, 0.85098, 0.84)
+theme_override_font_sizes/font_size = 28
+text = "Thank you for playing."
 horizontal_alignment = 1
